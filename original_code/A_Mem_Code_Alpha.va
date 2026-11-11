@@ -1,0 +1,95 @@
+//
+// MoTe2 Phase Change Memristor
+//
+`include "constants.h"
+`include "discipline.h"
+
+module A_Mem_Code_Alpha(p, n, w_position);
+    input p, n;
+    output w_position;
+    electrical p, n, w_position;
+
+// --- 1. Universal Physical Constants ---
+ parameter real kB = 8.617e-5; // Boltzmann constant (eV/K)
+ parameter real T = 300.0; // Temperature (K)
+ parameter real vt = 0.026; // Thermal voltage
+ parameter real q_charge = 1.602e-19; // Elementary electron charge (Coulombs)
+ // --- 2. Device Parameters (Table 2, D11: Ag/WSe2) ---
+ parameter real alpha = 5.3e18; // Barrier lowering coefficient
+ parameter real k_attempt = 1e12; // Attempt frequency (Hz)
+ // --- 3. Thresholds & Energies ---
+ parameter real v_off = 0; // SET threshold
+ parameter real v_on = 0; // RESET threshold
+ parameter real Eset = 3.0; // Activation Energy SET (eV)
+ parameter real Ereset = 3.5; // Activation Energy RESET (eV)
+ // --- 4. Conduction Parameters ---
+ parameter real Is = 1.0e-10; // Schottky Saturation Current
+ parameter real n_set = 16; // Ideality factor (SET)
+ parameter real n_reset = 15.0; // Ideality factor (RESET)
+ parameter real G_metallic = 0.05e-2; // Metallic conductance
+ // --- 5. State Limits & Exponents ---
+ parameter real w_init = 0.0; // Starts in OFF State (Semiconducting)
+ parameter real p_set = 9.0; // Polynomial window for SET
+ parameter real p_reset = 0.8;
+    
+    // Internal Variables
+    real w, dw_dt, window;
+    real I_sch, I_met, I_total;
+    real v_val, n_current, exp_arg;
+
+    analog begin
+        v_val = V(p, n);
+
+        // ==========================================
+        // PART 1: The Pure Theoretical Arrhenius Engine
+        // ==========================================
+        if (v_val > v_off) begin
+            // SET Process (Using alpha * q * V)
+            exp_arg = -(Eset - (alpha * q_charge * v_val)) / (kB * T);
+            dw_dt = k_attempt * exp(exp_arg) * pow(abs(1.0 - w), p_set);
+            
+        end else if (v_val < v_on) begin
+            // RESET Process (Using alpha * q * |V|)
+            exp_arg = -(Ereset - (alpha * q_charge * abs(v_val))) / (kB * T);
+            dw_dt = -k_attempt * exp(exp_arg) * pow(abs(w), p_reset);
+            
+        end else begin
+            // Inside the dead-zone
+            dw_dt = 0.0;
+        end
+
+        // ==========================================
+        // PART 2: SmartSpice Anti-Windup Engine
+        // ==========================================
+        window = 1.0;
+        
+        if ((w >= 0.999) && (dw_dt > 0.0)) window = 0.0;
+        if ((w <= 0.001) && (dw_dt < 0.0)) window = 0.0;
+        
+        w = idt(dw_dt * window, w_init);
+        
+        if (w > 1.0) w = 1.0;
+        if (w < 0.0) w = 0.0;
+
+        // ==========================================
+        // PART 3: Current Blending Output
+        // ==========================================
+        if (v_val >= 0.0) begin
+            n_current = n_set;
+        end else begin
+            n_current = n_reset;
+        end
+        
+        if (v_val >= 0.0) begin
+            I_sch = Is * (exp(v_val / (n_current * vt)) - 1.0);
+        end else begin
+            I_sch = -Is * (exp(abs(v_val) / (n_current * vt)) - 1.0);
+        end
+        
+        I_met = G_metallic * v_val;
+        I_total = (1.0 - w) * I_sch + w * I_met;
+        
+        V(w_position) <+ w;
+        I(p, n) <+ I_total;
+    end
+endmodule

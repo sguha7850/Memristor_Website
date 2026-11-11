@@ -1,0 +1,346 @@
+{
+  "_readme": "Editable website configuration. See documentation/EDITING_GUIDE.md. Defaults MUST equal the original code (enforced by validation/test_model_equivalence.py). Change label, symbol, units, description, min, max, step, scale, references freely. To turn a fixed parameter into a slider, move its entry from 'fixed' to 'sliders' and add scale/min/max. An empty units string means 'not stated in source' and is shown as such on the website.",
+  "config_version": "1.0.0",
+  "model": {
+    "name": "Deterministic physics-based memristor model",
+    "device_name": "",
+    "source_file": "Luisier_IOP_deterministic.py",
+    "verilog_file": "original_code/A_Mem_Code_Alpha.va",
+    "description": ""
+  },
+  "variants": [
+    {
+      "id": "empirical",
+      "label": "Empirical model",
+      "description": "Parameters chosen by manual fitting to the experimental data.",
+      "plot_style": {
+        "color": "#1f2937",
+        "dash": "solid"
+      }
+    },
+    {
+      "id": "ab_initio",
+      "label": "Ab initio (first-principles) model",
+      "description": "Uses the first-principles ('_fp') values: Eset_fp and Ereset_fp from reference papers; alpha_fp (via beta_fp) calibrated against the experimental data.",
+      "plot_style": {
+        "color": "#0891b2",
+        "dash": "dot"
+      }
+    }
+  ],
+  "parameters": {
+    "sliders": [
+      {
+        "name": "k_attempt",
+        "label": "Attempt frequency",
+        "symbol": "k_{\\mathrm{attempt}}",
+        "units": "Hz",
+        "units_source": "Python line 25 comment",
+        "classification": "physical",
+        "classification_note": "Physical meaning (attempt frequency); value chosen for best fit (manual fitting).",
+        "description": "Prefactor of the Arrhenius switching rate for both SET and RESET.",
+        "scale": "log",
+        "default": 6000000000000.0,
+        "min": 600000000000.0,
+        "max": 60000000000000.0,
+        "references": []
+      },
+      {
+        "name": "alpha",
+        "label": "Barrier-lowering coefficient",
+        "symbol": "\\alpha",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "fitting",
+        "classification_note": "Raw alpha as used in the code (alpha = beta/(L q) in the original). Empirical: fitted; ab initio: beta_fp calibrated to experimental data.",
+        "description": "Field-induced lowering of the activation barrier, entering as alpha*q*|V|.",
+        "scale": "linear",
+        "variant_specific": true,
+        "variants": {
+          "empirical": {
+            "default": 5.357142857142857e+18,
+            "min": 4.2857142857142856e+18,
+            "max": 6.428571428571428e+18
+          },
+          "ab_initio": {
+            "default": 5e+18,
+            "min": 4e+18,
+            "max": 6e+18
+          }
+        },
+        "references": []
+      },
+      {
+        "name": "Eset",
+        "label": "SET activation energy",
+        "symbol": "E_{\\mathrm{set}}",
+        "units": "eV",
+        "units_source": "Verilog-A line 23 comment (not stated in the Python source)",
+        "classification": "physical",
+        "classification_note": "Empirical: manually fitted. Ab initio (Eset_fp): from reference papers (to be added).",
+        "description": "Activation barrier of the SET (OFF to ON) transition.",
+        "scale": "linear",
+        "variant_specific": true,
+        "variants": {
+          "empirical": {
+            "default": 3.1,
+            "min": 2.6,
+            "max": 3.6
+          },
+          "ab_initio": {
+            "default": 3.0,
+            "min": 2.5,
+            "max": 3.5
+          }
+        },
+        "references": []
+      },
+      {
+        "name": "Ereset",
+        "label": "RESET activation energy",
+        "symbol": "E_{\\mathrm{reset}}",
+        "units": "eV",
+        "units_source": "Verilog-A line 24 comment (not stated in the Python source)",
+        "classification": "physical",
+        "classification_note": "Empirical: manually fitted. Ab initio (Ereset_fp): from reference papers (to be added).",
+        "description": "Activation barrier of the RESET (ON to OFF) transition.",
+        "scale": "linear",
+        "variant_specific": true,
+        "variants": {
+          "empirical": {
+            "default": 3.7,
+            "min": 3.2,
+            "max": 4.2
+          },
+          "ab_initio": {
+            "default": 3.5,
+            "min": 3.0,
+            "max": 4.0
+          }
+        },
+        "references": []
+      },
+      {
+        "name": "n_set",
+        "label": "Ideality factor (V >= 0)",
+        "symbol": "n_{\\mathrm{set}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "fitting",
+        "classification_note": "Used as in the code (selected by voltage polarity, V >= 0). Physical interpretation to be added by the author.",
+        "description": "Ideality factor in the Schottky current term for V >= 0.",
+        "scale": "linear",
+        "default": 16.28,
+        "min": 8.14,
+        "max": 24.42,
+        "references": []
+      },
+      {
+        "name": "n_reset",
+        "label": "Ideality factor (V < 0)",
+        "symbol": "n_{\\mathrm{reset}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "fitting",
+        "classification_note": "Used as in the code (selected by voltage polarity, V < 0). Physical interpretation to be added by the author.",
+        "description": "Ideality factor in the Schottky current term for V < 0.",
+        "scale": "linear",
+        "default": 15.0,
+        "min": 7.5,
+        "max": 22.5,
+        "references": []
+      },
+      {
+        "name": "p_set",
+        "label": "SET window exponent",
+        "symbol": "p_{\\mathrm{set}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "fitting",
+        "classification_note": "Fitted parameter (author, decision B5).",
+        "description": "Exponent of the SET window (1 - w)^p_set.",
+        "scale": "linear",
+        "default": 9.0,
+        "min": 1.0,
+        "max": 17.0,
+        "references": []
+      },
+      {
+        "name": "p_reset",
+        "label": "RESET window exponent",
+        "symbol": "p_{\\mathrm{reset}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "fitting",
+        "classification_note": "Fitted parameter (author, decision B5).",
+        "description": "Exponent of the RESET window w^p_reset.",
+        "scale": "linear",
+        "default": 0.8,
+        "min": 0.1,
+        "max": 1.5,
+        "references": []
+      },
+      {
+        "name": "Go",
+        "label": "Metallic conductance",
+        "symbol": "G_0",
+        "units": "",
+        "units_source": "not stated in source (comment: 'DP1 conductance')",
+        "classification": "fitting",
+        "classification_note": "Value chosen for best fit. G_metallic = Go (N_channels = 1 ignored, decision B1).",
+        "description": "Conductance of the metallic (ON-state) current path, I_met = Go * V.",
+        "scale": "log",
+        "default": 0.0005,
+        "min": 5e-05,
+        "max": 0.005,
+        "references": []
+      },
+      {
+        "name": "Is",
+        "label": "Schottky saturation current",
+        "symbol": "I_s",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "fitting",
+        "classification_note": "Value chosen for best fit.",
+        "description": "Prefactor of the Schottky (OFF-state) current term.",
+        "scale": "log",
+        "default": 5e-09,
+        "min": 5e-10,
+        "max": 5e-08,
+        "references": []
+      }
+    ],
+    "fixed": [
+      {
+        "name": "k_B",
+        "label": "Boltzmann constant",
+        "symbol": "k_B",
+        "units": "eV/K",
+        "units_source": "Python line 13 comment",
+        "classification": "constant",
+        "default": 8.617e-05,
+        "references": []
+      },
+      {
+        "name": "T",
+        "label": "Temperature",
+        "symbol": "T",
+        "units": "K",
+        "units_source": "Python line 14 comment",
+        "classification": "physical",
+        "classification_note": "Kept fixed (decision B2).",
+        "default": 300.0,
+        "references": []
+      },
+      {
+        "name": "q",
+        "label": "Elementary charge",
+        "symbol": "q",
+        "units": "",
+        "units_source": "not stated in Python source (Verilog-A: Coulombs)",
+        "classification": "constant",
+        "classification_note": "Value exactly as written in code: 1.6*10**-19.",
+        "default": 1.6000000000000002e-19,
+        "references": []
+      },
+      {
+        "name": "vt",
+        "label": "Thermal voltage",
+        "symbol": "v_t",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "physical",
+        "classification_note": "Fixed at 0.026, independent of T (decision B2).",
+        "default": 0.026,
+        "references": []
+      },
+      {
+        "name": "v_off",
+        "label": "SET threshold",
+        "symbol": "v_{\\mathrm{off}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "numerical",
+        "default": 0.0,
+        "references": []
+      },
+      {
+        "name": "v_on",
+        "label": "RESET threshold",
+        "symbol": "v_{\\mathrm{on}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "numerical",
+        "default": 0.0,
+        "references": []
+      },
+      {
+        "name": "w_init",
+        "label": "Initial state",
+        "symbol": "w_0",
+        "units": "",
+        "units_source": "dimensionless state variable",
+        "classification": "numerical",
+        "classification_note": "0 = OFF state (code comment, line 61).",
+        "default": 0.0,
+        "references": []
+      },
+      {
+        "name": "current_floor",
+        "label": "Plot current floor",
+        "symbol": "I_{\\mathrm{floor}}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "visualisation",
+        "classification_note": "Display floor for the log axis only; not physical (decision B9).",
+        "default": 1e-11,
+        "references": []
+      },
+      {
+        "name": "V_max",
+        "label": "Sweep amplitude",
+        "symbol": "V_{\\max}",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "stimulus",
+        "default": 4.0,
+        "references": []
+      },
+      {
+        "name": "freq",
+        "label": "Sweep frequency",
+        "symbol": "f",
+        "units": "",
+        "units_source": "not stated in source",
+        "classification": "stimulus",
+        "default": 1000.0,
+        "references": []
+      },
+      {
+        "name": "num_cycles",
+        "label": "Number of cycles",
+        "symbol": "N_{\\mathrm{cyc}}",
+        "units": "",
+        "units_source": "integer",
+        "classification": "numerical",
+        "default": 40,
+        "references": [],
+        "integer": true
+      },
+      {
+        "name": "pts_per_cycle",
+        "label": "Points per cycle",
+        "symbol": "N_{\\mathrm{pts}}",
+        "units": "",
+        "units_source": "integer",
+        "classification": "numerical",
+        "default": 1000,
+        "references": [],
+        "integer": true
+      }
+    ]
+  },
+  "references": [],
+  "experimental_data": "backend/data/experimental_iv.json"
+}

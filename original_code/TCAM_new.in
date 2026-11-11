@@ -1,0 +1,54 @@
+* 3T1R TCAM - Master Testbench (Write and Search in One Run)
+* ----------------------------------------------------
+* 1. Include Models
+* ----------------------------------------------------
+.verilog "A_Mem_Code_Alpha.va"
+.model nmos180 nmos level=1
+.model pmos180 pmos level=1
+.options itl4=100 reltol=0.005
+* ----------------------------------------------------
+* 2. 3T1R TCAM Subcircuit Definition
+* ----------------------------------------------------
+.subckt TCAM_3T1R ML SLp DLp SLr DLn SLn
+MP1 NX DLp SLp SLp pmos180 L=180n W=10u
+MN1 NX DLn SLn SLn nmos180 L=180n W=10u
+MNML ML NX 0 0 nmos180 L=180n W=20u
+XR1 SLr NX w1 A_Mem_Code_Alpha
+r_dummy w1 0 1G
+.ends TCAM_3T1R
+* ----------------------------------------------------
+* 3. Main Testbench Setup
+* ----------------------------------------------------
+X_TCAM_1 ML SLp DLp SLr DLn SLn TCAM_3T1R
+* Global VDD for Precharge Logic
+V_VDD VDD 0 DC 1.8
+V_SLn SLn 0 DC 0
+* ----------------------------------------------------
+* 4. Match Line Precharge Circuit & Capacitance
+* ----------------------------------------------------
+* 1pF Capacitor to hold ML charge during search phases
+C_ML ML 0 1p
+* Precharge Transistor
+M_PRE ML PRE_EN VDD VDD pmos180 L=180n W=10u
+* PRE_EN Pulses to 0V (ON) right before each Search Phase
+V_PRE_EN PRE_EN 0 PWL(0 1.8 2.19m 1.8 2.2m 0 2.39m 0 2.4m 1.8 4.19m 1.8 4.2m 0 4.39m 0 4.4m 1.8 6.19m 1.8 6.2m 0 6.39m 0 6.4m 1.8 7m 1.8)
+* ----------------------------------------------------
+* 5. Dynamic Data Line Sequences (Write + Search)
+* ----------------------------------------------------
+* DLn (NMOS Gate): Full write for SET/RESET, gentle 0.25V pulse for SET-M
+V_DLn DLn 0 PWL(0 0 0.99m 0 1m 6 2m 6 2.01m 0 4.99m 0 5m 0.25 5.05m 0.25 5.06m 0 7m 0)
+* SLr (Resistor Source): Active during writes, grounded during searches
+V_SLr SLr 0 PWL(0 0 0.99m 0 1m 4.5 2m 4.5 2.01m 0 4.99m 0 5m 3.8 5.05m 3.8 5.06m 0 7m 0)
+* SLp (PMOS Source): 4.5V for RESET, 1.8V during Searches
+V_SLp SLp 0 PWL(0 0 2.19m 0 2.2m 1.8 2.9m 1.8 2.91m 0 2.99m 0 3m 4.5 4m 4.5 4.01m 0 4.19m 0 4.2m 1.8 4.9m 1.8 4.91m 0 6.19m 0 6.2m 1.8 6.9m 1.8 6.91m 0 7m 0)
+* DLp (PMOS Gate): 4.5V (OFF), 0V (RESET), 1.65V (Goldilocks Choke for Searches)
+V_DLp DLp 0 PWL(0 4.5 2.39m 4.5 2.4m 1.65 2.8m 1.65 2.81m 4.5 2.99m 4.5 3m 0 4m 0 4.01m 4.5 4.39m 4.5 4.4m 1.65 4.8m 1.65 4.81m 4.5 6.39m 4.5 6.4m 1.65 6.8m 1.65 6.81m 4.5 7m 4.5)
+* ----------------------------------------------------
+* 6. Simulation Commands
+* ----------------------------------------------------
+.tran 0.01m 7m 0 
+.save v(DLp) v(X_TCAM_1.nx) v(ML) v(X_TCAM_1.w1) v(SLr) v(SLr, X_TCAM_1.nx) 
+.plot tran v(DLp) v(X_TCAM_1.nx) v(ML) v(X_TCAM_1.w1) v(SLr) v(SLr, X_TCAM_1.nx) 
+.print tran v(DLp) v(X_TCAM_1.nx) v(ML) v(X_TCAM_1.w1) v(SLr) v(SLr, X_TCAM_1.nx) 
+.iplot tran v(DLp) v(X_TCAM_1.nx) v(ML) v(X_TCAM_1.w1) v(SLr) v(SLp) v(SLn) v(DLn)
+.end
