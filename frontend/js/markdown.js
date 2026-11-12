@@ -108,24 +108,26 @@ function tex(s) {
 function paramTable(cfg) {
   const wrap = document.createElement("div");
   const rows = [];
-  const groups = [["Slider parameters", cfg.parameters.sliders, true],
-                  ["Fixed parameters", cfg.parameters.fixed, false]];
+  const groups = [["Adjustable parameters (sliders)", cfg.parameters.sliders, true],
+                  ["Constants and fixed values", cfg.parameters.fixed, false]];
   for (const [title, list, isSlider] of groups) {
     rows.push(`<tr><th colspan="7" style="background:var(--accent-soft);color:var(--accent)">${title}</th></tr>`);
     for (const p of list) {
-      let value, range = "—";
+      if (p.show_in_table === false) continue;
+      let value, range = "—", codeName = `<code>${escapeHtml(p.name)}</code>`;
       if (p.variant_specific) {
-        const e = p.variants.empirical, a = p.variants.ab_initio;
-        value = `Empirical: <code>${fmtNum(e.default)}</code><br>Ab initio: <code>${fmtNum(a.default)}</code>`;
-        if (isSlider) range = `Emp: ${fmtNum(e.min)} – ${fmtNum(e.max)}<br>Ab: ${fmtNum(a.min)} – ${fmtNum(a.max)}`;
+        const parts = cfg.variants.map((v) => ({ v, spec: p.variants[v.id], name: p.name + (v.param_suffix || "") }));
+        codeName = parts.map((x) => `<code>${escapeHtml(x.name)}</code>`).join("<br>");
+        value = parts.map((x) => `${escapeHtml(x.v.short_label || x.v.label)}: <code>${fmtNum(x.spec.default)}</code>`).join("<br>");
+        if (isSlider) range = parts.map((x) => `${escapeHtml(x.v.short_label || x.v.label)}: ${fmtNum(x.spec.min)} – ${fmtNum(x.spec.max)}`).join("<br>");
       } else {
         value = `<code>${fmtNum(p.default)}</code>`;
         if (isSlider) range = `${fmtNum(p.min)} – ${fmtNum(p.max)}${p.scale === "log" ? " (log)" : ""}`;
       }
-      const units = p.units ? escapeHtml(p.units) : `<span class="todo">to be added</span>`;
+      const units = p.units ? escapeHtml(p.units) : (p.integer ? "—" : `<span class="todo">to be added</span>`);
       const note = [p.description, p.classification_note].filter(Boolean).map(escapeHtml).join(" ");
       rows.push(`<tr>
-        <td><code>${escapeHtml(p.name)}</code></td>
+        <td>${codeName}</td>
         <td>${tex(p.symbol || p.name)}</td>
         <td>${value}</td>
         <td>${units}</td>
@@ -141,7 +143,7 @@ function paramTable(cfg) {
 }
 
 /* ---------- source code viewer ---------- */
-async function codeBlock(node, { src, lang = "plaintext", title }) {
+export async function codeBlock(node, { src, lang = "plaintext", title }) {
   node.className = "code-block card";
   node.innerHTML = `<div class="code-head"><span class="file">${escapeHtml(title || src)}</span>
     <span class="actions">

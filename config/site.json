@@ -1,19 +1,54 @@
 {
-  "_readme": "Site-level settings. Edit titles, navigation and text freely. Each page is either the interactive simulator or a Markdown file from content/. Add a page by adding an entry here and creating its .md file. See documentation/EDITING_GUIDE.md.",
-  "title": "Physics-Based Memristor Model",
+  "_readme": "Site-level settings. Edit titles, navigation and text freely. Each page is either the interactive simulator or a Markdown file from content/. Add a page by adding an entry here and creating its .md file. See documentation/EDITING_GUIDE.md. A markdown page may have an 'aside' list of source files shown in a right-hand column (stacked below the text on narrow screens).",
+  "title": "Unified Compact Model for Memristor",
   "subtitle": "Interactive deterministic simulation of resistive switching",
   "author": "",
   "affiliation": "",
   "contact": "",
   "footer": "Simulations run in your browser with the original Python model (via Pyodide). No data leaves your computer.",
   "pages": [
-    { "id": "simulator", "title": "Simulator", "type": "simulator", "intro": "content/simulator_intro.md" },
-    { "id": "model", "title": "Model & Equations", "type": "markdown", "source": "content/model.md" },
-    { "id": "code-deterministic", "title": "Deterministic Code", "type": "markdown", "source": "content/code_deterministic.md" },
-    { "id": "code-stochastic", "title": "Stochastic Code", "type": "markdown", "source": "content/code_stochastic.md" },
-    { "id": "code-verilog", "title": "Verilog-A & TCAM", "type": "markdown", "source": "content/code_verilog.md" },
-    { "id": "references", "title": "References", "type": "markdown", "source": "content/references.md" },
-    { "id": "about", "title": "About", "type": "markdown", "source": "content/about.md" }
+    {
+      "id": "simulator",
+      "title": "Simulator",
+      "type": "simulator",
+      "intro": "content/simulator_intro.md"
+    },
+    {
+      "id": "model",
+      "title": "Model & Equations",
+      "type": "markdown",
+      "source": "content/model.md",
+      "aside": [
+        {
+          "src": "Luisier_IOP_deterministic.py",
+          "lang": "python",
+          "title": "Deterministic model (Python)"
+        },
+        {
+          "src": "original_code/stochastic.py",
+          "lang": "python",
+          "title": "Stochastic model (Python)"
+        }
+      ]
+    },
+    {
+      "id": "code-verilog",
+      "title": "Verilog-A & TCAM",
+      "type": "markdown",
+      "source": "content/code_verilog.md"
+    },
+    {
+      "id": "references",
+      "title": "References",
+      "type": "markdown",
+      "source": "content/references.md"
+    },
+    {
+      "id": "about",
+      "title": "About",
+      "type": "markdown",
+      "source": "content/about.md"
+    }
   ],
   "plot": {
     "x_label": "Voltage (V)",

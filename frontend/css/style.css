@@ -235,3 +235,18 @@ h4 { font-size: 15.5px; margin: 1.4em 0 .4em; }
 .toc strong { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
 .toc ol { margin: 6px 0 0; padding-left: 20px; }
 .toc li { margin: 2px 0; }
+
+/* ---------- documentation page with a right-hand code column ---------- */
+.doc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+.doc-layout .doc { max-width: none; }
+.doc-aside { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.doc-aside .code-block { margin: 0; }
+@media (min-width: 1180px) {
+  .doc-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: 28px; }
+  .doc-aside { position: sticky; top: 76px; max-height: calc(100vh - 92px); grid-template-rows: 1fr 1fr; }
+  .doc-aside .code-block { display: flex; flex-direction: column; min-height: 0; }
+  .doc-aside .code-body { flex: 1; min-height: 0; max-height: none; }
+  .doc-aside .code-body.expanded { max-height: none; }
+}
+.doc-aside .code-body { font-size: 12px; }
+@media (min-width: 1180px) { .doc-aside [data-act="expand"] { display: none; } }

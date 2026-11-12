@@ -39,20 +39,17 @@ export async function buildSimulator(root, ctx) {
   head.appendChild(resetAll);
   controls.appendChild(head);
 
-  const shared = cfg.parameters.sliders.filter((p) => !p.variant_specific);
+  const isSweep = (p) => p.classification === "stimulus" || p.classification === "numerical";
+  const sweep = cfg.parameters.sliders.filter((p) => !p.variant_specific && isSweep(p));
+  const shared = cfg.parameters.sliders.filter((p) => !p.variant_specific && !isSweep(p));
   const specific = cfg.parameters.sliders.filter((p) => p.variant_specific);
   const paramWidgets = [];
 
+  if (sweep.length) controls.appendChild(group("Simulation", null, sweep.map((p) => paramControl(p, null))));
   controls.appendChild(group("Shared by both models", null, shared.map((p) => paramControl(p, null))));
   for (const v of variants) {
     controls.appendChild(group(v.label, v, specific.map((p) => paramControl(p, v.id))));
   }
-  const fixedNote = el("div", "group");
-  fixedNote.innerHTML = `<div class="group-title">Fixed in this version</div>
-    <div style="font-size:12.5px;color:var(--ink-2)">${cfg.parameters.fixed.map((p) =>
-      `<code style="font-size:11.5px">${escapeHtml(p.name)}</code>&nbsp;=&nbsp;${fmtNum(p.default)}${p.units ? "&nbsp;" + escapeHtml(p.units) : ""}`).join(" · ")}
-    <br><span style="color:var(--ink-3)">Values from the original code. They can be made into sliders in <code>config/model_config.json</code>.</span></div>`;
-  controls.appendChild(fixedNote);
 
   resetAll.onclick = () => { paramWidgets.forEach((w) => w.reset(false)); schedule(); };
 
@@ -61,7 +58,7 @@ export async function buildSimulator(root, ctx) {
   ivCard.innerHTML = `<div class="plot-toolbar"><h2>Current–voltage hysteresis (semilog)</h2>
     <div class="toggles">
       ${variants.map((v) => `<label><input type="checkbox" data-show="${v.id}" checked>
-        <span class="swatch ${v.plot_style.dash === "dot" ? "dot" : ""}" style="background:${colorFor(v.id)};border-color:${colorFor(v.id)}"></span>${escapeHtml(shortLabel(v.label))}</label>`).join("")}
+        <span class="swatch ${v.plot_style.dash === "dot" ? "dot" : ""}" style="background:${colorFor(v.id)};border-color:${colorFor(v.id)}"></span>${escapeHtml(v.short_label || shortLabel(v.label))}</label>`).join("")}
       <label><input type="checkbox" data-show="experimental" ${view.show.experimental ? "checked" : ""}>
         <span style="color:var(--curve-exp)">○</span>Experimental</label>
       <label title="Display only: the simulation always runs all cycles">Show
@@ -180,7 +177,7 @@ export async function buildSimulator(root, ctx) {
         traces.push({
           type: "scattergl", mode: "lines", name: v.label, x: V, y: I,
           line: { color: colorFor(v.id, c), width: 2.4, dash: v.plot_style.dash === "dot" ? "dot" : "solid" },
-          hovertemplate: "V = %{x:.4g}<br>|I| = %{y:.4g}<extra>" + escapeHtml(shortLabel(v.label)) + "</extra>",
+          hovertemplate: "V = %{x:.4g}<br>|I| = %{y:.4g}<extra>" + escapeHtml(v.short_label || shortLabel(v.label)) + "</extra>",
         });
       }
     }
@@ -238,7 +235,7 @@ export async function buildSimulator(root, ctx) {
     const rows = variants.map((v) => {
       const r = res[v.id];
       if (!r) return "";
-      if (r.status !== "ok") return `<tr><td style="font-family:var(--font-body)">${escapeHtml(shortLabel(v.label))}</td><td colspan="4">not valid</td></tr>`;
+      if (r.status !== "ok") return `<tr><td style="font-family:var(--font-body)">${escapeHtml(v.short_label || shortLabel(v.label))}</td><td colspan="4">not valid</td></tr>`;
       let wmin = Infinity, wmax = -Infinity, imin = Infinity, imax = -Infinity;
       for (let i = 0; i < r.w.length; i++) {
         if (r.w[i] < wmin) wmin = r.w[i];
@@ -246,7 +243,7 @@ export async function buildSimulator(root, ctx) {
         if (r.I_abs[i] < imin) imin = r.I_abs[i];
         if (r.I_abs[i] > imax) imax = r.I_abs[i];
       }
-      return `<tr><td style="font-family:var(--font-body)">${escapeHtml(shortLabel(v.label))}</td>
+      return `<tr><td style="font-family:var(--font-body)">${escapeHtml(v.short_label || shortLabel(v.label))}</td>
         <td>${wmin.toFixed(4)}</td><td>${wmax.toFixed(4)}</td><td>${fmtNum(imin)}</td><td>${fmtNum(imax)}</td></tr>`;
     }).join("");
     root.querySelector("#sim-summary").innerHTML =
@@ -281,34 +278,37 @@ export async function buildSimulator(root, ctx) {
     const spec = variantId ? p.variants[variantId] : p;
     const k = key(p.name, variantId);
     const isLog = p.scale === "log";
+    const steps = p.integer ? Math.round(spec.max - spec.min) : SLIDER_STEPS;
     const lo = isLog ? Math.log10(spec.min) : spec.min;
     const hi = isLog ? Math.log10(spec.max) : spec.max;
     const toPos = (x) => {
       const u = isLog ? Math.log10(x) : x;
-      return Math.round(((u - lo) / (hi - lo)) * SLIDER_STEPS);
+      return Math.round(((u - lo) / (hi - lo)) * steps);
     };
     const fromPos = (pos) => {
-      const u = lo + (pos / SLIDER_STEPS) * (hi - lo);
+      const u = lo + (pos / steps) * (hi - lo);
       const x = Number((isLog ? 10 ** u : u).toPrecision(5));
       return p.integer ? Math.round(x) : x;
     };
     const node = el("div", "param");
-    const unitsHtml = p.units ? escapeHtml(p.units) : `<span title="Units not stated in source; to be added">—</span>`;
+    const realUnits = p.units && p.units !== "dimensionless";
+    const unitsHtml = realUnits ? escapeHtml(p.units) : "";
+    const suffix = variantId ? (variants.find((v) => v.id === variantId).param_suffix || "") : "";
     node.innerHTML = `
       <div class="param-top">
-        <label class="param-label" for="in-${k}">${escapeHtml(p.label)} <span class="param-name">${escapeHtml(p.name)}</span></label>
+        <label class="param-label" for="in-${k}">${escapeHtml(p.label)} <span class="param-name">${escapeHtml(p.name + suffix)}</span></label>
       </div>
       <div class="param-row">
-        <input type="range" id="rg-${k}" min="0" max="${SLIDER_STEPS}" step="1" aria-label="${escapeHtml(p.label)}">
+        <input type="range" id="rg-${k}" min="0" max="${steps}" step="1" aria-label="${escapeHtml(p.label)}">
         <input class="param-value" id="in-${k}" inputmode="decimal" spellcheck="false">
-        <span class="param-units ${p.units ? "" : "missing"}">${unitsHtml}</span>
+        <span class="param-units">${unitsHtml}</span>
         <button class="param-reset" title="Reset to value in code (${fmtNum(spec.default)})" aria-label="Reset">↺</button>
       </div>
       <div class="param-range"><span>${fmtNum(spec.min)}</span><span>${isLog ? "log scale" : ""}</span><span>${fmtNum(spec.max)}</span></div>`;
     const range = node.querySelector("input[type=range]");
     const box = node.querySelector(".param-value");
     const sync = () => {
-      range.value = Math.min(SLIDER_STEPS, Math.max(0, toPos(state[k])));
+      range.value = Math.min(steps, Math.max(0, toPos(state[k])));
       box.value = fmtNum(state[k]);
       box.classList.remove("invalid");
       node.classList.toggle("changed", state[k] !== spec.default);
@@ -354,7 +354,7 @@ function initialState(cfg) {
 const key = (name, variant) => (variant ? `${name}__${variant}` : name);
 function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
 function button(text, cls) { const b = el("button", cls); b.textContent = text; return b; }
-function shortLabel(s) { return s.replace(/\s*\([^)]*\)\s*/g, " ").trim().replace(/\s+model$/i, ""); }
+function shortLabel(s) { return s.replace(/\s*\([^)]*\)\s*/g, " ").trim().replace(/\s+model$/i, ""); }  // fallback when no short_label
 function colorFor(id, c) {
   const varName = id === "empirical" ? "--curve-emp" : "--curve-ab";
   if (c) return c(varName);

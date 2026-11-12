@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This site presents a physics-based memristor model:
+This site presents the unified compact model for memristor:
 - an interactive deterministic simulation;
 - its governing equations;
 - the source code: deterministic Python, stochastic Python (documentation only) and Verilog-A with a TCAM circuit.

@@ -1,7 +1,7 @@
 /* Application shell: loads config, builds navigation, routes between pages.
    Pages are declared in config/site.json; nothing here is page-specific. */
 
-import { renderMarkdown, escapeHtml } from "./markdown.js";
+import { renderMarkdown, escapeHtml, codeBlock } from "./markdown.js";
 import { buildSimulator } from "./simulator.js";
 
 const ctx = { site: null, modelConfig: null, onThemeChange: [] };
@@ -89,7 +89,24 @@ async function route() {
       } else {
         const md = await (await fetch(page.source, { cache: "no-cache" })).text();
         node.innerHTML = "";
-        node.appendChild(renderMarkdown(md, pctx));
+        const doc = renderMarkdown(md, pctx);
+        if (page.aside && page.aside.length) {
+          // two columns: text on the left, source files on the right (stacked on narrow screens)
+          const layout = document.createElement("div");
+          layout.className = "doc-layout";
+          const side = document.createElement("aside");
+          side.className = "doc-aside";
+          side.setAttribute("aria-label", "Source code");
+          for (const item of page.aside) {
+            const block = document.createElement("div");
+            side.appendChild(block);
+            codeBlock(block, item);
+          }
+          layout.append(doc, side);
+          node.appendChild(layout);
+        } else {
+          node.appendChild(doc);
+        }
       }
     } catch (err) {
       node.innerHTML = `<div class="alert err">Could not load this page (${escapeHtml(err.message)}).</div>`;

@@ -1,8 +1,8 @@
 {
-  "_readme": "Editable website configuration. See documentation/EDITING_GUIDE.md. Defaults MUST equal the original code (enforced by validation/test_model_equivalence.py). Change label, symbol, units, description, min, max, step, scale, references freely. To turn a fixed parameter into a slider, move its entry from 'fixed' to 'sliders' and add scale/min/max. An empty units string means 'not stated in source' and is shown as such on the website.",
+  "_readme": "Editable website configuration. See documentation/EDITING_GUIDE.md. Defaults MUST equal the original code (enforced by validation/test_model_equivalence.py). Change label, symbol, units, description, min, max, step, scale, references freely. To turn a fixed parameter into a slider, move its entry from 'fixed' to 'sliders' and add scale/min/max. An empty units string means 'not stated in source' and is shown as such on the website. Units: a unit string, 'dimensionless', or '' (not yet added). 'show_in_table': false hides a fixed parameter from the documentation table.",
   "config_version": "1.0.0",
   "model": {
-    "name": "Deterministic physics-based memristor model",
+    "name": "Unified compact model for memristor",
     "device_name": "",
     "source_file": "Luisier_IOP_deterministic.py",
     "verilog_file": "original_code/A_Mem_Code_Alpha.va",
@@ -11,21 +11,25 @@
   "variants": [
     {
       "id": "empirical",
-      "label": "Empirical model",
-      "description": "Parameters chosen by manual fitting to the experimental data.",
+      "label": "Free data model",
+      "description": "Every parameter value is a fitted value, chosen to best match the experimental data.",
       "plot_style": {
         "color": "#1f2937",
         "dash": "solid"
-      }
+      },
+      "short_label": "Free data",
+      "param_suffix": ""
     },
     {
       "id": "ab_initio",
-      "label": "Ab initio (first-principles) model",
-      "description": "Uses the first-principles ('_fp') values: Eset_fp and Ereset_fp from reference papers; alpha_fp (via beta_fp) calibrated against the experimental data.",
+      "label": "Ab initio model",
+      "description": "First-principles activation energies Eset_fp and Ereset_fp; alpha_fp calibrated against the experimental data.",
       "plot_style": {
         "color": "#0891b2",
         "dash": "dot"
-      }
+      },
+      "short_label": "Ab initio",
+      "param_suffix": "_fp"
     }
   ],
   "parameters": {
@@ -52,7 +56,7 @@
         "units": "",
         "units_source": "not stated in source",
         "classification": "fitting",
-        "classification_note": "Raw alpha as used in the code (alpha = beta/(L q) in the original). Empirical: fitted; ab initio: beta_fp calibrated to experimental data.",
+        "classification_note": "Raw alpha as used in the code. Free data: fitted; ab initio (alpha_fp): calibrated to experimental data.",
         "description": "Field-induced lowering of the activation barrier, entering as alpha*q*|V|.",
         "scale": "linear",
         "variant_specific": true,
@@ -77,7 +81,7 @@
         "units": "eV",
         "units_source": "Verilog-A line 23 comment (not stated in the Python source)",
         "classification": "physical",
-        "classification_note": "Empirical: manually fitted. Ab initio (Eset_fp): from reference papers (to be added).",
+        "classification_note": "Free data: fitted. Ab initio (Eset_fp): from reference papers.",
         "description": "Activation barrier of the SET (OFF to ON) transition.",
         "scale": "linear",
         "variant_specific": true,
@@ -102,7 +106,7 @@
         "units": "eV",
         "units_source": "Verilog-A line 24 comment (not stated in the Python source)",
         "classification": "physical",
-        "classification_note": "Empirical: manually fitted. Ab initio (Ereset_fp): from reference papers (to be added).",
+        "classification_note": "Free data: fitted. Ab initio (Ereset_fp): from reference papers.",
         "description": "Activation barrier of the RESET (ON to OFF) transition.",
         "scale": "linear",
         "variant_specific": true,
@@ -124,8 +128,8 @@
         "name": "n_set",
         "label": "Ideality factor (V >= 0)",
         "symbol": "n_{\\mathrm{set}}",
-        "units": "",
-        "units_source": "not stated in source",
+        "units": "dimensionless",
+        "units_source": "author",
         "classification": "fitting",
         "classification_note": "Used as in the code (selected by voltage polarity, V >= 0). Physical interpretation to be added by the author.",
         "description": "Ideality factor in the Schottky current term for V >= 0.",
@@ -139,8 +143,8 @@
         "name": "n_reset",
         "label": "Ideality factor (V < 0)",
         "symbol": "n_{\\mathrm{reset}}",
-        "units": "",
-        "units_source": "not stated in source",
+        "units": "dimensionless",
+        "units_source": "author",
         "classification": "fitting",
         "classification_note": "Used as in the code (selected by voltage polarity, V < 0). Physical interpretation to be added by the author.",
         "description": "Ideality factor in the Schottky current term for V < 0.",
@@ -154,8 +158,8 @@
         "name": "p_set",
         "label": "SET window exponent",
         "symbol": "p_{\\mathrm{set}}",
-        "units": "",
-        "units_source": "not stated in source",
+        "units": "dimensionless",
+        "units_source": "author",
         "classification": "fitting",
         "classification_note": "Fitted parameter (author, decision B5).",
         "description": "Exponent of the SET window (1 - w)^p_set.",
@@ -169,8 +173,8 @@
         "name": "p_reset",
         "label": "RESET window exponent",
         "symbol": "p_{\\mathrm{reset}}",
-        "units": "",
-        "units_source": "not stated in source",
+        "units": "dimensionless",
+        "units_source": "author",
         "classification": "fitting",
         "classification_note": "Fitted parameter (author, decision B5).",
         "description": "Exponent of the RESET window w^p_reset.",
@@ -182,13 +186,13 @@
       },
       {
         "name": "Go",
-        "label": "Metallic conductance",
+        "label": "Compliance conductance",
         "symbol": "G_0",
-        "units": "",
-        "units_source": "not stated in source (comment: 'DP1 conductance')",
+        "units": "S",
+        "units_source": "author (I_met = Go·V)",
         "classification": "fitting",
-        "classification_note": "Value chosen for best fit. G_metallic = Go (N_channels = 1 ignored, decision B1).",
-        "description": "Conductance of the metallic (ON-state) current path, I_met = Go * V.",
+        "classification_note": "Fitted value.",
+        "description": "Conductance of the metallic (ON-state) current path, I_met = Go·V.",
         "scale": "log",
         "default": 0.0005,
         "min": 5e-05,
@@ -199,16 +203,31 @@
         "name": "Is",
         "label": "Schottky saturation current",
         "symbol": "I_s",
-        "units": "",
-        "units_source": "not stated in source",
+        "units": "A",
+        "units_source": "author",
         "classification": "fitting",
-        "classification_note": "Value chosen for best fit.",
+        "classification_note": "Fitted value.",
         "description": "Prefactor of the Schottky (OFF-state) current term.",
         "scale": "log",
         "default": 5e-09,
         "min": 5e-10,
         "max": 5e-08,
         "references": []
+      },
+      {
+        "name": "num_cycles",
+        "label": "Number of cycles",
+        "symbol": "N_{\\mathrm{cyc}}",
+        "units": "",
+        "units_source": "integer",
+        "classification": "stimulus",
+        "default": 40,
+        "references": [],
+        "integer": true,
+        "description": "Number of sinusoidal sweep cycles simulated (the original code uses 40).",
+        "scale": "linear",
+        "min": 1,
+        "max": 50
       }
     ],
     "fixed": [
@@ -263,7 +282,8 @@
         "units_source": "not stated in source",
         "classification": "numerical",
         "default": 0.0,
-        "references": []
+        "references": [],
+        "show_in_table": false
       },
       {
         "name": "v_on",
@@ -273,7 +293,8 @@
         "units_source": "not stated in source",
         "classification": "numerical",
         "default": 0.0,
-        "references": []
+        "references": [],
+        "show_in_table": false
       },
       {
         "name": "w_init",
@@ -295,7 +316,8 @@
         "classification": "visualisation",
         "classification_note": "Display floor for the log axis only; not physical (decision B9).",
         "default": 1e-11,
-        "references": []
+        "references": [],
+        "show_in_table": false
       },
       {
         "name": "V_max",
@@ -318,17 +340,6 @@
         "references": []
       },
       {
-        "name": "num_cycles",
-        "label": "Number of cycles",
-        "symbol": "N_{\\mathrm{cyc}}",
-        "units": "",
-        "units_source": "integer",
-        "classification": "numerical",
-        "default": 40,
-        "references": [],
-        "integer": true
-      },
-      {
         "name": "pts_per_cycle",
         "label": "Points per cycle",
         "symbol": "N_{\\mathrm{pts}}",
@@ -337,7 +348,8 @@
         "classification": "numerical",
         "default": 1000,
         "references": [],
-        "integer": true
+        "integer": true,
+        "show_in_table": false
       }
     ]
   },

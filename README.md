@@ -1,6 +1,6 @@
-# Physics-Based Memristor Model: Interactive Website
+# Unified Compact Model for Memristor: Interactive Website
 
-An interactive website for a deterministic physics-based memristor model. It offers:
+An interactive website for the unified compact model for memristor. It offers:
 - **a live simulator:** sliders change the semilog current–voltage hysteresis;
 - **equations and documentation** for the model;
 - **source code** in three languages: deterministic Python, stochastic Python (shown as documentation only) and Verilog-A with a TCAM circuit.

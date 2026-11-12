@@ -4,7 +4,7 @@
 
 ## Model
 
-1. <span class="todo">Reference for the deterministic physics-based model, to be added.</span>
+1. <span class="todo">Reference for the unified compact model, to be added.</span>
 
 ## First-principles (ab initio) parameters
 

@@ -31,7 +31,8 @@ Example entry:
 |---|---|
 | `label`, `description` | Free text |
 | `symbol` | LaTeX without dollar signs, e.g. `E_{\\mathrm{set}}` (backslashes are doubled in JSON) |
-| `units` | e.g. `"A"`. An empty string shows "—" on the slider and "to be added" in the parameter table |
+| `units` | e.g. `"A"`. Use `"dimensionless"` for quantities without units (nothing is shown next to the slider). An empty string `""` shows "to be added" in the parameter table |
+| `show_in_table` | (fixed parameters) `false` hides the parameter from the table on the Model & Equations page |
 | `units_source` | Where the unit comes from |
 | `min`, `max` | Slider start and end values. `min` must be below the default and the default below `max` |
 | `scale` | `"linear"` or `"log"`. Log needs `min > 0` |
@@ -92,6 +93,21 @@ The order in the list is the order in the menu.
 The same file also holds:
 - the site title, subtitle, author, affiliation and footer;
 - the plot axis labels (`plot`).
+
+### Source-code column on a page
+
+In `config/site.json`, a page can list source files in `"aside"`. They are shown in a right-hand column, or below the text on narrow screens. Example (the Model & Equations page):
+
+```json
+"aside": [
+  { "src": "Luisier_IOP_deterministic.py", "lang": "python", "title": "Deterministic model (Python)" },
+  { "src": "original_code/stochastic.py", "lang": "python", "title": "Stochastic model (Python)" }
+]
+```
+
+### Model names
+
+The model names ("Free data model", "Ab initio model"), their short names in the legend, their descriptions and the `_fp` suffix shown on the ab initio sliders are set under `variants` in `config/model_config.json`.
 
 ## 6. Figures
 

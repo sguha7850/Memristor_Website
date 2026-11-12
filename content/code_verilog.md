@@ -29,27 +29,27 @@
 
 ## Device model: parameters
 
-Values are as written in the `.va` file. Units are those stated in the file's comments; others are *to be added*.
+Values are as written in the `.va` file. Units are from the file's comments or from the author; others are *to be added*.
 
-| Name | Value | Units (from comment) | Comment in code | Python deterministic value |
+| Name | Value | Units | Comment in code | Python deterministic value |
 |---|---|---|---|---|
 | `kB` | 8.617e-5 | eV/K | Boltzmann constant | same |
 | `T` | 300.0 | K | Temperature | same |
 | `vt` | 0.026 | <span class="todo">to be added</span> | Thermal voltage | same |
 | `q_charge` | 1.602e-19 | Coulombs | Elementary electron charge | 1.6e-19 |
-| `alpha` | 5.3e18 | <span class="todo">to be added</span> | Barrier lowering coefficient | 5.357e18 (emp.), 5.0e18 (ab initio) |
+| `alpha` | 5.3e18 | <span class="todo">to be added</span> | Barrier lowering coefficient | 5.357e18 (free data), 5.0e18 (ab initio, `alpha_fp`) |
 | `k_attempt` | 1e12 | Hz | Attempt frequency | 6e12 |
 | `v_off` | 0 | <span class="todo">to be added</span> | SET threshold | same |
 | `v_on` | 0 | <span class="todo">to be added</span> | RESET threshold | same |
-| `Eset` | 3.0 | eV | Activation Energy SET | 3.0 = `Eset_fp` |
-| `Ereset` | 3.5 | eV | Activation Energy RESET | 3.5 = `Ereset_fp` |
-| `Is` | 1.0e-10 | <span class="todo">to be added</span> | Schottky Saturation Current | 5.0e-9 |
-| `n_set` | 16 | <span class="todo">to be added</span> | Ideality factor (SET) | 16.28 |
-| `n_reset` | 15.0 | <span class="todo">to be added</span> | Ideality factor (RESET) | same |
-| `G_metallic` | 0.05e-2 | <span class="todo">to be added</span> | Metallic conductance | same ($G_0$) |
+| `Eset` | 3.0 | eV | Activation Energy SET | 3.0 (= ab initio `Eset_fp`) |
+| `Ereset` | 3.5 | eV | Activation Energy RESET | 3.5 (= ab initio `Ereset_fp`) |
+| `Is` | 1.0e-10 | A | Schottky Saturation Current | 5.0e-9 |
+| `n_set` | 16 | dimensionless | Ideality factor (SET) | 16.28 |
+| `n_reset` | 15.0 | dimensionless | Ideality factor (RESET) | same |
+| `G_metallic` | 0.05e-2 | S | Metallic (compliance) conductance | same ($G_0$) |
 | `w_init` | 0.0 | — | Starts in OFF State (Semiconducting) | same |
-| `p_set` | 9.0 | — | Polynomial window for SET | same |
-| `p_reset` | 0.8 | — | (no comment) | same |
+| `p_set` | 9.0 | dimensionless | Polynomial window for SET | same |
+| `p_reset` | 0.8 | dimensionless | (no comment) | same |
 
 **Fixed in the code body (not parameters):**
 - State limits 0.001 / 0.999, used by the "anti-windup" check (lines 66–67).
