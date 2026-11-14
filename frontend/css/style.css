@@ -243,13 +243,8 @@ h4 { font-size: 15.5px; margin: 1.4em 0 .4em; }
 .doc-aside .code-block { margin: 0; }
 @media (min-width: 1180px) {
   .doc-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: 28px; }
-  .doc-aside { position: sticky; top: 76px; max-height: calc(100vh - 92px); grid-template-rows: 1fr 1fr; }
-  .doc-aside .code-block { display: flex; flex-direction: column; min-height: 0; }
-  .doc-aside .code-body { flex: 1; min-height: 0; max-height: none; }
-  .doc-aside .code-body.expanded { max-height: none; }
 }
 .doc-aside .code-body { font-size: 12px; }
-@media (min-width: 1180px) { .doc-aside [data-act="expand"] { display: none; } }
 
 /* ---------- state-variable plot pair ---------- */
 .plot-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
@@ -289,3 +284,7 @@ a.btn { text-decoration: none; display: inline-block; }
 .custom-note { margin: 4px 0 12px; font-size: 13.5px; }
 .custom-note code { font: 0.9em var(--font-mono); background: var(--surface); padding: 1px 4px; border-radius: 4px; }
 .code-editor { min-height: 420px; }
+
+/* code column: stacked source files, each scrollable; Expand shows the whole file */
+.doc-aside .code-body { max-height: 440px; }
+.doc-aside .code-body.expanded { max-height: none; }

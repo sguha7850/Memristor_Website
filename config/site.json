@@ -35,14 +35,18 @@
           "src": "original_code/stochastic.py",
           "lang": "python",
           "title": "Stochastic model (Python)"
+        },
+        {
+          "src": "original_code/A_Mem_Code_Alpha.va",
+          "lang": "verilog",
+          "title": "Verilog-A model"
+        },
+        {
+          "src": "original_code/TCAM_new.in",
+          "lang": "plaintext",
+          "title": "TCAM circuit netlist (SmartSpice)"
         }
       ]
-    },
-    {
-      "id": "code-verilog",
-      "title": "Verilog-A & TCAM",
-      "type": "markdown",
-      "source": "content/code_verilog.md"
     },
     {
       "id": "references",
