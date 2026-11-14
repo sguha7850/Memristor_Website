@@ -1,11 +1,11 @@
 # Simulate your own device
 
-Run the energy-landscape model, or your own variant of it, with your parameter values and compare it with your measured data.
+Use the energy-landscape model with your own device parameters and experimental data.
 
-1. **Download the template** and change the values in `PARAMETERS`, and if needed the equations in `simulate()`. Or edit the code directly in the box below.
-2. Press **Run code**. A control appears for every entry in `PARAMETERS`; entries with a `min` and `max` get a slider.
-3. Optionally **upload your experimental I–V data**: a CSV or text file with two columns, voltage (V) and current (A).
+1. In the **model file** below, change only the **parameter values** (for example `Eset`, `Ereset`, `beta`, `k_attempt`, `Is`, `n_set`, `n_reset`, `G0`, the window exponents and the sweep settings).
+2. Replace the arrays **`x_exp`** (voltage, V) and **`y_exp`** (current, A) with your measured I–V data.
+3. Press **Run code**. The simulated I–V curve is plotted together with your data, along with the state variable against voltage.
 
-The file must define `PARAMETERS` and a function `simulate(p)` that returns the voltage `V`, current `I` and, optionally, the state variable `w` and time `t`. The full rules are written at the top of the template.
+You can also download the template, edit it on your computer and upload it with **Upload .py file**. In every case, **follow exactly the structure of the template**: keep all variable names unchanged, because the website reads `V_signal`, `current`, `state`, `x_exp` and `y_exp` from the file to draw the plots. Plotting commands in the file (`plt.show()`, `plt.savefig()`, …) are ignored on the website.
 
 > **Privacy:** your code and data never leave your computer. They run in your own browser, in an isolated Python environment, and nothing is uploaded to a server. If a simulation runs too long, press **Stop**.

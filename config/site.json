@@ -18,8 +18,7 @@
       "title": "Simulate Your Device",
       "type": "custom",
       "intro": "content/custom_intro.md",
-      "template": "backend/templates/user_model_template.py",
-      "example_data": "backend/templates/example_experimental_data.csv"
+      "template": "backend/templates/user_model_template.py"
     },
     {
       "id": "model",

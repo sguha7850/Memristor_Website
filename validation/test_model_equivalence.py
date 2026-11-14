@@ -187,26 +187,38 @@ def test_unknown_parameter_rejected():
 TEMPLATE = ROOT / "backend" / "templates" / "user_model_template.py"
 
 
-def test_template_loads_and_matches_website_model():
-    """The downloadable template reproduces the website model (free data set)."""
+def test_runner_matches_running_the_template_directly():
+    """The page's runner returns exactly what the template computes when run normally."""
+    import importlib
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    code = TEMPLATE.read_text(encoding="utf-8")
+    saved = plt.show, plt.savefig
+    plt.show = plt.savefig = lambda *a, **k: None
+    try:
+        direct = runpy.run_path(str(TEMPLATE))
+    finally:
+        plt.show, plt.savefig = saved
+        plt.close("all")
     import user_model_runner as r
-    info = r.load(TEMPLATE.read_text(encoding="utf-8"))
-    assert info["parameters"]["num_cycles"]["integer"] is True
-    out = r.run({})                               # template defaults
-    ref = mm.simulate({"num_cycles": 2}, "empirical")
-    I_t = np.maximum(np.abs(out["I"]), 1e-11)
-    np.testing.assert_allclose(out["V"], ref["V"], rtol=0, atol=1e-12)
-    np.testing.assert_allclose(out["w"], ref["w"], rtol=1e-9, atol=1e-12)
-    np.testing.assert_allclose(I_t, ref["I_abs"], rtol=1e-9)
+    out = r.run_script(code)
+    for mod in [m for m in list(sys.modules) if m == "matplotlib" or m.startswith("matplotlib.")]:
+        del sys.modules[mod]                      # remove the stand-in, restore real matplotlib
+    importlib.import_module("matplotlib")
+    np.testing.assert_array_equal(out["V"], np.asarray(direct["V_signal"], float))
+    np.testing.assert_array_equal(out["I"], np.asarray(direct["current"], float))
+    np.testing.assert_array_equal(out["w"], np.asarray(direct["state"], float))
+    assert out["x_exp"] == list(map(float, direct["x_exp"]))
+    assert out["y_exp"] == list(map(float, direct["y_exp"]))
     assert out["n_nonfinite"] == 0
 
 
-def test_runner_rejects_bad_files():
+def test_runner_reports_renamed_variables():
     import user_model_runner as r
-    with pytest.raises(ValueError):
-        r.load("PARAMETERS = {}\n")                         # no simulate()
-    with pytest.raises(ValueError):
-        r.load("PARAMETERS = {'a': {'min': 0}}\ndef simulate(p): pass\n")   # no default
-    r.load("PARAMETERS = {'a': 1.0}\ndef simulate(p): return {'V': [0, 1], 'I': [0]}\n")
-    with pytest.raises(ValueError):
-        r.run({})                                           # unequal lengths
+    with pytest.raises(ValueError, match="Missing: current"):
+        r.run_script("V_signal=[0,1]\nstate=[0,0]\n")
+    with pytest.raises(ValueError, match="same length"):
+        r.run_script("V_signal=[0,1]\ncurrent=[1]\nstate=[0,0]\n")
+    for mod in [m for m in list(sys.modules) if m == "matplotlib" or m.startswith("matplotlib.")]:
+        del sys.modules[mod]

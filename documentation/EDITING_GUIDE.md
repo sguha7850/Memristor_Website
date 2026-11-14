@@ -120,15 +120,16 @@ The model names ("Free data model", "Ab initio model"), their short names in the
 
 ## 8. "Simulate Your Device" page
 
-Visitors can run their own Python model file on this page. Their code runs only in their own browser; nothing is uploaded.
+Visitors run a model file with their own parameter values and experimental data. Their code runs only in their own browser; nothing is uploaded.
 
 | What | Where |
 |---|---|
-| Page text, rules shown to visitors | `content/custom_intro.md` |
-| Template visitors download (format rules at its top) | `backend/templates/user_model_template.py` |
-| Example experimental data offered on the page | `backend/templates/example_experimental_data.csv` |
-| Page title, template and example paths | `config/site.json` → the page with `"type": "custom"` |
+| Page text and instructions | `content/custom_intro.md` |
+| Template shown in the code box and offered for download | `backend/templates/user_model_template.py` |
+| Page title and template path | `config/site.json` → the page with `"type": "custom"` |
 
-**Changing the required file format:** the format is checked by `backend/user_model_runner.py`. The file must define `PARAMETERS` and `simulate(p)`; `simulate` must return `V` and `I`, and optionally `w` and `t`. If you change these rules, update the template's header text and `content/custom_intro.md` to match, then run the tests (`python -m pytest validation`).
+**How it works:** the file is executed exactly as written (matplotlib commands are ignored), then the website reads the variables `V_signal`, `current`, `state` and, if present, `x_exp` and `y_exp`, and plots them. This is done by `backend/user_model_runner.py`.
+
+**Replacing the template:** you can replace `user_model_template.py` with a new version at any time. Keep those five variable names, or update `REQUIRED` in `backend/user_model_runner.py` and the instructions in `content/custom_intro.md` to match. Then run the tests (`python -m pytest validation`).
 
 **Showing the ab initio model again on the Simulator page:** in `config/model_config.json`, under `variants`, set `"show_in_simulator": true` (or delete that line) for `ab_initio`.

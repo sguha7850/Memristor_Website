@@ -1,97 +1,273 @@
-"""
-Template: simulate your own memristor with the energy-landscape model
-=====================================================================
+import numpy as np
+import sys
+np.set_printoptions(threshold=sys.maxsize)
+import matplotlib.pyplot as plt
+plt.rcParams.update({
+    'axes.labelsize': 24,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18
+}) 
+fig, ax = plt.subplots()
+# --- 1. Physical Constants ---
+k_B = 8.617e-5          # Boltzmann constant (eV/K)
+T = 300                 # Temperature (K)
+G0 = 0.4e-2             # DP1 conductance
+L = 0.7e-9              # Device thickness (0.7nm)
 
-How to use
-  1. Change the values in PARAMETERS to those of your device (and, if you
-     wish, the equations inside simulate()).
-  2. Upload this file on the "Simulate Your Device" page of the website,
-     or paste it into the code box there, and press "Run code".
-  3. Optionally upload your measured I-V data (CSV with two columns:
-     voltage in V, current in A) to compare with the simulation.
+# --- 2. Model Parameters ---
+Ea = 2.0                # Activation Energy (eV)
+beta = 0.65e-9          # Field coupling constant (eV*m/V)
+k_attempt = 1e10        # Attempt frequency (Hz)
 
-Rules the website relies on
-  * Keep the names PARAMETERS and simulate.
-  * PARAMETERS maps each parameter name to a dictionary with
-        "default"  (required) value used when the page opens
-        "min", "max"  (optional) slider range; without them only a number box is shown
-        "scale"    (optional) "linear" (default) or "log"
-        "units", "label"  (optional) text shown next to the control
-    An integer default (e.g. 2, not 2.0) gives an integer parameter.
-  * simulate(p) receives a dictionary {name: value} and must return a
-    dictionary with
-        "V": applied voltage for each time step (V)
-        "I": device current for each time step (A, signed)
-        "w": state variable for each time step (optional, enables the w-V plot)
-        "t": time for each time step (s, optional)
-    All returned lists must have the same length.
-  * Do not plot, read or write files here: the website does the plotting.
-    The Python standard library is available; numpy and scipy can be
-    imported (they are downloaded automatically the first time).
+# Schottky Parameters
+Is = 0.5e-8
+n_set = 19
+n_reset = 15
+vt = 0.026
 
-The code below is the deterministic energy-landscape model with the
-free-model (fitted) parameter values used on the website.
-"""
+# Metallic Parameters
+N_channels = 1
+G_metallic = N_channels * G0
 
-import math
+freq = 1e3                          # 1 kHz
+t = np.linspace(0, 1/freq, 25000)   # 1 cycle
+V_max = 4.0                         # 4.5V Amplitude
+V_signal = V_max * np.sin(2 * np.pi * freq * t)
+V_signal[V_signal < 0] *= 0.4
+dt = t[1] - t[0]
 
-MODEL_NAME = "Energy-landscape model (template)"
-CURRENT_FLOOR = 1e-11          # |I| below this is drawn at this value on the log axis
+class MoTe2:
+    def __init__(self): 
+        # Thresholds
+        self.v_off = 0.4
+        self.v_on = -0.4
+        self.Eset = 3.39
+        self.Ereset = 1.38
 
-PARAMETERS = {
-    # --- switching kinetics -------------------------------------------------
-    "k_attempt": {"default": 6e12, "min": 6e11, "max": 6e13, "scale": "log", "units": "Hz", "label": "Attempt frequency"},
-    "alpha":     {"default": 5.357142857142857e18, "min": 4.2857142857142856e18, "max": 6.428571428571428e18, "label": "Barrier-lowering coefficient"},
-    "Eset":      {"default": 3.1, "min": 2.6, "max": 3.6, "units": "eV", "label": "SET activation energy"},
-    "Ereset":    {"default": 3.7, "min": 3.2, "max": 4.2, "units": "eV", "label": "RESET activation energy"},
-    "p_set":     {"default": 9.0, "min": 1.0, "max": 17.0, "label": "SET window exponent"},
-    "p_reset":   {"default": 0.8, "min": 0.1, "max": 1.5, "label": "RESET window exponent"},
-    # --- conduction --------------------------------------------------------
-    "n_set":     {"default": 16.28, "min": 8.14, "max": 24.42, "label": "Ideality factor (V >= 0)"},
-    "n_reset":   {"default": 15.0, "min": 7.5, "max": 22.5, "label": "Ideality factor (V < 0)"},
-    "Is":        {"default": 5e-9, "min": 5e-10, "max": 5e-8, "scale": "log", "units": "A", "label": "Schottky saturation current"},
-    "Go":        {"default": 5e-4, "min": 5e-5, "max": 5e-3, "scale": "log", "units": "S", "label": "Compliance conductance"},
-    # --- voltage sweep -----------------------------------------------------
-    "V_max":     {"default": 4.0, "min": 0.5, "max": 8.0, "units": "V", "label": "Sweep amplitude"},
-    "freq":      {"default": 1e3, "min": 1e1, "max": 1e5, "scale": "log", "units": "Hz", "label": "Sweep frequency"},
-    "num_cycles": {"default": 2, "min": 1, "max": 20, "label": "Number of cycles"},
-    "T":         {"default": 300.0, "units": "K", "label": "Temperature"},
-}
+        # State limits
+        self.w_init = 0    # Starts in OFF State
+        self.w = self.w_init
+        self.p_set = 5
+        self.p_reset = 0.3
 
-# constants used by the model (not adjustable on the page)
-K_B = 8.617e-5                 # Boltzmann constant (eV/K)
-Q = 1.6e-19                    # elementary charge (C)
-VT = 0.026                     # thermal voltage (V)
-PTS_PER_CYCLE = 1000
-
-
-def simulate(p):
-    n = p["num_cycles"] * PTS_PER_CYCLE
-    t_stop = p["num_cycles"] / p["freq"]
-    dt = t_stop / (n - 1)
-    kT = K_B * p["T"]
-
-    w = 0.0                    # start in the OFF state (HRS)
-    t_out, V_out, I_out, w_out = [], [], [], []
-    for i in range(n):
-        t = i * dt
-        v = p["V_max"] * math.sin(2 * math.pi * p["freq"] * t)
-
-        # SET (V > 0) and RESET (V < 0): field-assisted Arrhenius kinetics
-        if v > 0:
-            rate = p["k_attempt"] * math.exp(-(p["Eset"] - p["alpha"] * Q * v) / kT) * (1 - w) ** p["p_set"]
-        elif v < 0:
-            rate = -p["k_attempt"] * math.exp(-(p["Ereset"] - p["alpha"] * Q * abs(v)) / kT) * w ** p["p_reset"]
+    def dw_dt(self, v):
+        if v > self.v_off:
+            window = (1 - self.w)**self.p_set
+            return k_attempt * np.exp((-(self.Eset - beta * (v/L)) / (k_B * T))) * window
+        elif v < self.v_on:
+            # Using -(self.w**p) to ensure a negative rate for RESET
+            window = -(self.w)**self.p_reset 
+            return k_attempt * np.exp((-(self.Ereset - beta * (abs(v/L))) / (k_B * T))) * window
         else:
-            rate = 0.0
-        w = min(1.0, max(0.0, w + rate * dt))          # explicit Euler + clipping to [0, 1]
+            return 0
 
-        # current: Schottky (HRS) and metallic (LRS) paths blended by w
-        n_id = p["n_set"] if v >= 0 else p["n_reset"]
-        I_sch = math.copysign(p["Is"] * (math.exp(abs(v) / (n_id * VT)) - 1), v) if v != 0 else 0.0
-        I_met = p["Go"] * v
-        I = (1 - w) * I_sch + w * I_met
+# --- 3. Simulation Loop ---
+memristor = MoTe2()
+current = []
+state = []
+derivative = []
 
-        t_out.append(t); V_out.append(v); I_out.append(I); w_out.append(w)
+for v in V_signal:
+    dw_val = memristor.dw_dt(v)
+    derivative.append(dw_val)
+    
+    # Update and clip state variable
+    memristor.w = np.clip(memristor.w + dw_val * dt, 0, 1)
+    state.append(memristor.w)
+    
+    # Select ideality factor based on polarity
+    if v >= 0:
+        n_current = n_set
+    else:
+        n_current = n_reset
+        
+    # Calculate Schottky and Metallic components
+    I_sch = Is * (np.exp(np.abs(v) / (n_current * vt)) - 1) * np.sign(v)
+    I_met = G_metallic * v
+    
+    # Total current blending (HRS vs LRS)
+    I_total = (1 - memristor.w) * I_sch + memristor.w * I_met
+    I_clipped = np.maximum(np.abs(I_total), 1e-13)
+    current.append(I_clipped)
 
-    return {"t": t_out, "V": V_out, "I": I_out, "w": w_out}
+# --- 4. Plotting ---
+
+# Plot 1: State Variable vs Voltage
+plt.figure(figsize=(8, 4))
+plt.plot(V_signal, state)
+plt.title("State Variable (w) vs Voltage")
+plt.xlabel("Voltage (V)")
+plt.ylabel("State (w)")
+plt.grid(True)
+plt.show()
+
+# Plot 2: I-V Characteristics (Log Scale)
+plt.figure(figsize=(10, 6.8))
+plt.semilogy(V_signal, current, label="Simulated Model", linewidth=4)
+
+# Experimental Data Reference
+x_exp = [0.01676,
+0.01676,
+0.01676,
+0.01676,
+0.01676,
+0.01676,
+0.01676,
+0.01676,
+0.04144,
+0.14016,
+0.32454,
+0.71798,
+0.92704,
+1.19708,
+1.44389,
+1.76329,
+2.04639,
+2.35418,
+2.62422,
+2.84634,
+3.11638,
+3.28915,
+3.50982,
+3.75518,
+3.97731,
+3.26447,
+3.26447,
+3.26447,
+3.26447,
+3.26447,
+3.26447,
+3.26447,
+3.26447,
+3.19042,
+3.00604,
+2.79698,
+2.53856,
+2.29175,
+2.08269,
+1.87363,
+1.65295,
+1.33355,
+1.07513,
+0.65701,
+0.4102,
+0.20114,
+0.0908,
+0.02837,
+0.02837,
+0.02837,
+0.02837,
+-0.0689,
+-0.21699,
+-0.40137,
+-0.58575,
+-0.77013,
+-0.97919,
+-1.01694,
+-1.20132,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.26229,
+-1.32327,
+-1.3857,
+-1.49604,
+-1.21293,
+-1.00387,
+-0.7832,
+-0.56107,
+-0.31571,
+-0.16763,
+-0.10665]
+y_exp = [0.0000000486018,
+0.000000081374,
+0.000000203254,
+0.000000659447,
+0.00000241976,
+0.0000078508,
+0.0000170739,
+0.00005169,
+0.000248272,
+0.000911005,
+0.00276,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00689,
+0.00384,
+0.00154,
+0.000415681,
+0.0000993971,
+0.0000308727,
+0.0000101977,
+0.00000259322,
+0.000000659447,
+0.000000364703,
+0.000000319997,
+0.000000280771,
+0.000000390847,
+0.000000445451,
+0.000000445451,
+0.000000445451,
+0.000000319997,
+0.000000120466,
+0.0000000671376,
+0.0000000306341,
+0.0000000123593,
+0.00000000465278,
+0.00000000118318,
+0.000000000364679,
+0.000000000120459,
+0.0000000000374143,
+0.0000000000101182,
+0.000615376,
+0.002,
+0.00358,
+0.0053,
+0.00733,
+0.00408,
+0.002,
+0.00242,
+0.00242,
+0.000911005,
+0.000282957,
+0.0000765221,
+0.0000308727,
+0.0000101977,
+0.00000314311,
+0.000000751577,
+0.00000023165,
+0.000000156478,
+0.000000217824,
+0.000000264013,
+0.000000105699,
+0.0000000426441,
+0.0000000170728,
+0.00000000779014,
+0.00000000257319,
+0.000000000849959,
+0.000000000319976]
+print("Finished")
+plt.semilogy(x_exp, y_exp, 'r--', label="Experimental Data", alpha=0.7,linewidth=4)
+
+plt.xlabel("Voltage (V)")
+plt.ylabel("Current (A)")
+plt.legend(fontsize=20)
+plt.grid(True, which="both", ls="-", alpha=0.3)
+plt.show()
+plt.savefig("Akinwande_iv_curve.png", dpi=900)
