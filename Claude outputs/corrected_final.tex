@@ -1,0 +1,279 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This is a (brief) model paper using the achemso class
+%% The document class accepts keyval options, which should include
+%% the target journal and optionally the manuscript type. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[aip,apl,reprint,floatfix]{revtex4-2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Packages
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[version=3]{mhchem}
+\usepackage[T1]{fontenc}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage[title]{appendix}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{manyfoot}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{hyphenat}
+\usepackage{gensymb}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage[3]{natbib}
+\citeindextrue
+\raggedbottom
+
+\DeclareSIUnit\angstrom{\text {Å}}
+
+% Changes marked in red. To remove the colour, replace the next line by:
+% \newcommand{\changed}[1]{#1}
+\newcommand{\changed}[1]{\textcolor{red}{#1}}
+
+\begin{document}
+\nocite{aip41Control} % <-- Activates the et al. rule
+
+\title{Energy-Landscape Derived Compact Model for 2D Memristor}
+
+\author{Sourav Guha}
+\email{souravguha@iisc.ac.in}
+\affiliation{Nano-Scale Device Research Laboratory, Department of Electronic Systems Engineering, Indian Institute of Science (IISc), Bangalore-560012, India}
+
+
+\author{Md Shahzeb Haidar}
+\email{mdshaidar.iee.ug@jadavpuruniversity.in}
+\affiliation{Jadavpur University, Kolkata, West Bengal 700032}
+
+\author{Padmapriya K}
+\email{priyak@ursc.gov.in}
+\affiliation{Indigenisation and ASIC Design Group, U R Rao Satellite Centre, Indian Space Research Organisation, Bangalore-560012, India}
+
+\author{Santanu Mahapatra}
+\email{santanu@iisc.ac.in}
+\affiliation{Nano-Scale Device Research Laboratory, Department of Electronic Systems Engineering, Indian Institute of Science (IISc), Bangalore-560012, India}
+
+\begin{abstract}
+Two-dimensional (2D) material–based memristors promise ultimate vertical scaling for high-density in-memory computing, yet their hardware realization demands physics-based, SPICE-compatible compact models. Conventional bulk-oxide-based memristor models may not account for the atomic thickness and distinct switching mechanisms of 2D active layers. Here, we present a generalized compact model derived from the minimum-energy pathway of atomic rearrangement during resistive switching. Validated against extensive experimental data, our model reliably captures switching dynamics across monolayer-to-multilayer insulators, active and passive electrodes, lateral 2D geometries, conventional oxides, and bio-organic systems, while incorporating the intrinsic stochasticity of switching. Preliminary results also indicate the model's potential to capture multi-state switching behavior. When implemented in a commercial circuit simulator, the model achieves robust convergence in simulations of content-addressable memory cells, bridging the gap between atomistic switching physics and system-level neuromorphic design.
+\end{abstract}
+
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Start the main part of the manuscript here.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+Nonvolatile resistive switching random access memory (RRAM), commonly known as \changed{memristors}, combine memory and processing in one nanoscale device, retaining data without power. They enable ultra-dense, low-energy, fast non-volatile storage, overcoming Flash limitations \cite{6193402}. Crucially, they power neuromorphic and in-memory computing, mimicking synapses to cut the von Neumann bottleneck, accelerating AI while reducing energy consumption dramatically \cite{Yang2013Memristive}. Since the demonstration by Samsung \cite{1419232} and then by HP \cite{Strukov2008}, Metal-Insulator-Metal (MIM) architecture has been adopted in industry to realize memristance and transition metal oxides (TMO), e.g., HfO$_{2}$, TaO$_{x}$ or TiO$_{2}$, \changed{have} been used as insulators.  Foundries such as \changed{TSMC integrate} them with CMOS as embedded memory and applications have been demonstrated for computer vision and deep-learning applications\cite{TSMC}. In these devices, an applied electric field drives the migration of metal cations or oxygen vacancies between the electrodes, forming conductive filaments that provide a low-resistance path and switch the device from a high-resistance state (HRS) to a low-resistance state (LRS). Applying a reverse bias or a reset pulse ruptures the filaments and restores the HRS. However, filament formation is inherently stochastic and site-specific, giving rise to cycle-to-cycle and device-to-device variability and, consequently, unreliable memory states \cite{Roldan2023Variability}. Recent years have seen tremendous activities in replacing the TMO with 2D materials like hexagonal boron nitride\cite{Zhang2024Memristors}, MoS$_{2}$ \cite{MoS2} and graphene \cite{Standley}\changed{, which} offer atomically thin channels, lower switching energy, better uniformity, flexibility and extreme scalability.  Machine Learning computation has been  demonstrated for wafer-scale cross-bar arrays \cite{Tang2022WaferScale} and BEOL compatibility is demonstrated with standard CMOS process \cite{Shi2018Electronic}.
+
+Compact models turn device physics into accurate, SPICE-compatible analytical equations, letting designers predict performance, power, variability and reliability before fabrication. Without them, new technologies cannot enter design kits or be validated in circuits, which makes compact models the bridge from lab breakthrough to commercial product. Building on the seminal work from HP Labs \cite{Strukov2008}, several phenomenological compact models \cite{Pickett2009Switching,Kvatinsky2013TEAM} have been proposed for TMO-memristors, in which the active-layer resistance is represented as a series combination of two voltage-controlled resistors. Researchers at Stanford University \cite{Jiang} and elsewhere \cite{Yu,Guan2012,Huang2013,Li2014} subsequently developed physics-based models founded on conductive-filament growth and rupture, which also captured the inherent stochasticity of resistive switching. In contrast, theoretical studies of 2D memristors have so far been confined largely to atomistic investigations of the switching mechanisms, using computationally demanding ab initio simulations and molecular dynamics \cite{Mitra2024Atomistic}. Together with experimental reports \cite{atomrister,zhang2019electric}, these studies point to a diverse set of switching mechanisms. Intrinsic mechanisms include phase transition \cite{zhang2019electric}, interlayer bridge formation \cite{Ducry2022} and sulphur-atom displacement \cite{Mitra2021}, while extrinsic, electrode-dependent mechanisms include atom adsorption at defect sites \cite{Hus2021,Ge2018} and filament growth along grain boundaries \cite{Sangwan2015}. Consequently, modelling approaches developed for TMO memristors cannot be directly applied to their 2D counterparts. Particularly, in monolayer-thick devices \cite{Rajput2024DefectEngineered} the active layer cannot meaningfully be partitioned into two series resistive regions. Compact modelling of 2D memristors therefore calls for a fundamentally new generalized approach \changed{applicable to} all these distinct switching \changed{mechanisms}. 
+
+Here, we present a physics-based compact model derived from the minimum-energy pathway (MEP) of atomic rearrangement. The device state is represented by a normalized reaction coordinate along this pathway, whose evolution is governed by field-assisted Arrhenius kinetics, while the device current combines Schottky emission, metallic conduction, and Gaussian stochasticity. Demonstrating exceptional generalizability, the model accurately captures switching dynamics across diverse 2D materials, conventional oxides, bio-organics, and multi-state configurations. Implemented in SILVACO Smartspice \cite{SilvacoSmartSpice}, it achieves robust convergence in content-addressable memory (CAM) cells, directly bridging atomistic physics and neuromorphic design.
+
+
+%\section{Energy landscape model}
+
+A \changed{voltage-controlled} memristive system \cite{Chua1976} is \changed{defined by}
+\begin{equation}
+\begin{aligned}
+    \changed{I} &= \changed{G(w,V)\,V(t)}, \\
+    \frac{dw}{dt} &= \changed{f(w,V)},
+\end{aligned}
+\label{eq:memristive_system}
+\end{equation}
+where $V(t)$ is \changed{the} applied time-varying voltage, $I(t)$ is the current, \changed{$G(w,V)$ is the conductance,} $w$ is an internal state variable and \changed{$f(w,V)$} governs its evolution. Equation~\eqref{eq:memristive_system} specifies only the mathematical nature of the system; it does not prescribe the physical meaning of $w$ or the form of \changed{$f(w,V)$}. In device models, these are typically chosen to represent a particular switching mechanism. This is a challenge for atomically thin materials, where, as mentioned before, the switching physics varies across devices and material systems. To create a unified framework capable of capturing this diversity, our model generalizes the switching mechanism by directly parameterizing the underlying potential energy landscape. In any memristor, the atomic configurations between \changed{the} two electrodes \changed{change} upon application of an electric field, \changed{evolving} from a stable semiconducting configuration (initial OFF state) to a stable metallic configuration (final ON state). The minimum energy pathway (MEP) is the lowest-energy route between them. A reaction coordinate, which is generally \changed{normalized}, is a one-dimensional variable, $d$, that tracks this evolution from initial to final configuration as shown in Fig. \ref{energy landscape}. In this MEP, the initial and final \changed{states} must be separated by \changed{a} finite energy barrier to ensure non-volatility of the memory. An external electric field modulates the energy barrier and enables bi-directional switching \cite{Ducry2022,Mitra2021,Guha}. The energies of the initial, saddle-point and final configurations along the MEP define the activation barriers used in the model. The memristive state variable \changed{$w$} in this case is the normalized reaction coordinate \changed{ $d$}.
+
+To govern the transition across this energy landscape, we utilize continuous Arrhenius rate dynamics. By coupling the applied electric field to the activation energy barriers separating the energy basins, this graph-based energy-landscape approach provides a generalized physical model, \changed{agnostic} to any specific atomic-scale switching mechanism.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=\columnwidth]{image_1.jpg}
+    \caption{Field-driven energy landscape of atomic switching\changed{.}  (a) Minimum energy pathway along the reaction coordinate showing the initial, saddle point, and final atomic configurations, defining activation barriers $E_{\text{SET}}$ and $E_{\text{RESET}}$. (b) Electric-field-induced barrier lowering, illustrating the modulation of activation energies ($\Delta E_{\text{SET}}$ and $\Delta E_{\text{RESET}}$) during switching\changed{.}}
+    \label{energy landscape}
+\end{figure}
+
+The SET process transitions the system from the high-resistance (OFF, $d = 0$) to the low-resistance (ON, $d = 1$) state as the state variable $d$ increases, whereas the reverse RESET process corresponds to $d$ decreasing.
+
+Each direction crosses its own barrier on the energy landscape. We therefore assign separate activation energies, $E_{\text{SET}}$ and $E_{\text{RESET}}$, to the two pathways. This is a deliberate modelling choice. When the two energies are equal, the landscape is symmetric and the SET and RESET characteristics mirror each other. When they differ, the landscape is asymmetric, so the model can reproduce devices whose SET and RESET thresholds and speeds differ. $E_{\text{SET}}$ and $E_{\text{RESET}}$ are therefore tuning parameters that \changed{allow} one formulation to cover both symmetric and asymmetric switching characteristics.
+ The term $\alpha qV$ represents \changed{the} effective barrier lowering (equivalent to \changed{$\Delta E_{\text{SET}}$ and $\Delta E_{\text{RESET}}$} in \changed{Fig.~}\ref{energy landscape}) due to \changed{the} applied electric field \cite{Russo,Ielmini}. SET and RESET are activated for applied bias ($V$) greater than and less than zero volt respectively. Depending on the phase-transition mechanism, SET and RESET can \changed{have} different microscopic \changed{origins}. For example, in the ECM (Electrochemical metallization)  kinetics model \cite{Menzel}, $\alpha$ is the charge-transfer coefficient inside a barrier-lowering term that reduces the effective barrier. In principle, one should assign \changed{different} values for $\alpha_{\text{SET}}$ and $\alpha_{\text{RESET}}$ for the two pathways. However, $\alpha$ is a fitting parameter rather than a directly measured quantity. Using separate values changes the SET and RESET characteristics only negligibly compared with using one common value \cite{Ielmini}. We therefore adopt a \textbf{single $\alpha$ for both processes} since it reduces the number of free parameters to be optimized against the experimental data.
+\\The general definition of memristive system requires the derivative of the state variable $d(t)$ to be a function of the state variable $d$ itself and applied bias ($V$), which is accurately maintained in our model through the Arrhenius equation. The dependence of the derivative of the state variable on the state variable $d$ acts as window function, which constrains the state variable bounds $d \in [0,1]$.
+The evolution of \changed{$d(t)$} during \changed{the} SET process ($V > \changed{0}$) \changed{can} be written as
+\begin{equation}
+    \frac{dd(t)}{dt} = k_{attempt} \cdot \exp\left( -\frac{E_{SET} - \alpha qV}{k_B T} \right) \cdot \changed{\left(1 - d(t)\right)^{p_{SET}}}
+    \label{eq:set}
+\end{equation}
+
+and for the \changed{RESET} process ($V < \changed{0}$) \changed{as}
+\begin{equation}
+    \frac{dd(t)}{dt} = \changed{-\,}k_{attempt} \cdot \exp\left( -\frac{E_{RESET} - \changed{\alpha q|V|}}{\changed{k_B T}} \right) \cdot \changed{d(t)^{p_{RESET}}}
+    \label{eq:reset}
+\end{equation}
+\changed{\noindent where the exponents $p_{SET}$ and $p_{RESET}$ shape the window functions $(1-d)^{p_{SET}}$ and $d^{\,p_{RESET}}$, and $|V|$ is used in Eq.~\eqref{eq:reset} because $V<0$ during RESET.}
+
+Memristors are intrinsically stochastic nanoelectronic devices since the resistive switching happens due to atomic rearrangement under electric field, which is \changed{an} electrochemical process \cite{Filatov,Lee}. In oxide-based filamentary memristors, switching between the low-resistance state (LRS) and high-resistance state (HRS) relies on the restoration and rupture of conductive filaments (CFs) composed of oxygen vacancies ($V_O\text{s}$) via $O^{2-}$ ion jumps across nearest-neighbor lattice sites—processes governed by both ion drift and diffusion that are inherently stochastic. For 2D materials, electrode-atom-adsorption in sulfur \changed{vacancies} of MoS$_2$ is \changed{of a} similar nature \cite{Tsai2017}. Even cycle-to-cycle variation is observed in MoTe$_2$ based phase change memory \cite{Hong}.  Because these random transitions directly modulate the memristance $R(t)$ and the current $I(t)$, their effect carries into memory and neuromorphic circuits as state-dependent variability in read currents, thresholds and switching times. A purely deterministic compact model cannot reproduce this behaviour, so the stochasticity must be built into the model itself. In our model we therefore combine the deterministic Arrhenius-driven evolution of $d$ with a Gaussian stochastic component as follows
+
+\begin{equation}
+\Delta d(t) = \left( \frac{dd(t)}{dt} \right) \Delta t + \delta \xi \sqrt{\Delta t}
+\end{equation}
+
+\noindent \changed{where} $\delta$ defines the magnitude of the random force and $\xi$ is the standard normal random variable $\xi \sim \mathcal{N}(0,1)$.
+
+
+
+
+
+% \begin{table*}[htbp]
+% \centering
+% \caption{Summary of Model Parameters and Symbols}
+% \label{tab:model_parameters}
+% \begin{tabular}{lll}
+% \hline
+% \textbf{Symbol} & \textbf{Name / Description} & \textbf{Purpose in the Model} \\ \hline
+% $d(t)$ & Normalized state variable & Interpolates device state between Schottky ($d=0$) and metallic ($d=1$) phases. \\
+% $t, \Delta t$ & Time and simulation time step & Define continuous time evolution and the discrete integration step size. \\
+% $\frac{dd(t)}{dt}$ & Deterministic switching rate & Governs the thermally activated, field-driven drift rate during SET and RESET. \\
+% $\Delta d(t)$ & Total state variable change & Combines deterministic drift and stochastic diffusion over time step $\Delta t$. \\
+% $k_{\text{attempt}}$ & Arrhenius attempt factor & Sets the base attempt frequency for thermally activated phase transitions. \\
+% $E_{\text{set}}, E_{\text{reset}}$ & SET/RESET activation energies & Define the zero-bias energy barriers for the SET and RESET processes. \\
+% $\alpha$ & Barrier-lowering coefficient & Quantifies how effectively the applied voltage reduces the activation barrier. \\
+% $q$ & Elementary charge & Converts applied voltage into energy within the barrier-lowering term. \\
+% $V, v$ & Applied terminal voltage & Drives state-switching kinetics ($V$) and electrical conduction ($v$). \\
+% $v_{\text{off}}, v_{\text{on}}$ & SET/RESET threshold voltages & Specify the onset voltages required to trigger SET and RESET switching. \\
+% $k_B$ & Boltzmann constant & Relates local temperature to thermal energy ($k_B T$) in the Arrhenius term. \\
+% $T$ & Local temperature & Sets the thermal energy available to assist barrier crossing. \\
+% $\sigma$ & Noise standard deviation & Controls the magnitude of random fluctuations acting on the state variable. \\
+% $\eta$ & Effective viscosity & Scales the response of the state variable to the stochastic noise force. \\
+% $\xi$ & Standard normal random variable & Introduces zero-mean, unit-variance Gaussian white noise ($\xi \sim \mathcal{N}(0,1)$). \\
+% $I_{\text{schottky}}$ & Schottky barrier current & Models non-linear conduction in the high-resistance state (HRS). \\
+% $I_s$ & Reverse saturation current & Sets the baseline current scale for Schottky conduction. \\
+% $n$ & Ideality factor & Captures deviations from ideal thermionic emission across the Schottky barrier. \\
+% $V_T$ & Thermal voltage & Sets the thermal voltage scale ($k_B T/q$) in the Schottky diode equation. \\
+% $I_{\text{met}}$ & Metallic filament current & Models linear Ohmic conduction in the low-resistance state (LRS). \\
+% $G_{\text{metallic}}$ & Metallic filament conductance & Defines the Ohmic conductance of the metallic filament. \\
+% $I_{\text{total}}$ & Total device current & Computes net current by interpolating between $I_{\text{schottky}}$ and $I_{\text{met}}$ via $d(t)$. \\ \hline
+% \end{tabular}
+% \end{table*}
+
+The total current $I_{total}$ flowing through the device is modeled as a weighted combination of the currents from the initial semiconducting phase to the final metallic phase, based on the state variable $d(t)$.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=\columnwidth]{fig2V3_C.jpg}
+\caption{Energy landscape model fitted to vertical and lateral memristors: (a) Au/m-MoS$_{2}$/Au \cite{atomrister} (b) Ti/Ni/MoTe$_{2}$/Ti/Au \cite{Zhang2018},(c) Pd/NbOCl$_{2}$/Pd \cite{Sanchali}, (d) Gra/h-BN/Gra \cite{deng2022}, }
+    \label{fig:fitted_model_1}
+\end{figure}
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=\columnwidth]{honey_C.jpg}
+\caption{Energy landscape model fitted to conventional TMO and organic honey molecule memristors respectively: (a) TiN/HfO$_{2}$/Pt \cite{Jiang2016}, and (b) Al/honey/ITO \cite{SUEOKA2022106622}.}
+    \label{fig:fitted_model_2}
+\end{figure}
+
+
+
+For the initial phase, the current follows the thermionic emission model:
+\begin{equation}
+    I_{schottky} = \changed{\operatorname{sgn}(V)\,} I_s \left( \exp\left( \frac{\changed{|V|}}{n V_T} \right) - 1 \right)
+    \label{eq:schottky}
+\end{equation}
+\changed{where} $I_s$ is the saturation current, $n$ is the ideality factor \changed{($n = n_{SET}$ for $V \ge 0$ and $n = n_{RESET}$ for $V < 0$)}, and $V_T$ is the thermal voltage\changed{.}
+
+For the final metallic phase, the current follows Ohm's Law:
+\begin{equation}
+    I_{met} = G_{metallic} \cdot V
+\end{equation}
+\changed{where} $G_{metallic}$ represents the conductance of the metallic filament.
+
+The total current is calculated by interpolating between the two phases using the state variable $d(t)$:
+\begin{equation}
+    I_{total} = (1 - d(t)) \cdot I_{schottky} + d(t) \cdot I_{met}
+\end{equation}
+
+Upon calibration with the experimental data, the maximum value of the current will be limited to the compliance current. The \changed{complete} list of model parameters \changed{is given in} Table S1 \changed{of the} Supplementary Information.
+
+
+%\section{Simulation results}
+
+
+%\section{Discussion}\label{discussion}
+
+We first validate our model against experimental data from various \textit{vertical} 2D binary memristors from diverse research groups \cite{hou2024strain,atomrister,zhang2019electric,Sanchali,deng2022,jnohBN} as presented in Fig \ref{fig:fitted_model_1} (D1 to D4) and \ref{fig:fitted_model_2} (D5 and D6). Some of these devices use both active (metal) electrodes and some of them passive (graphene and \changed{graphite) electrodes, and} various \changed{active-layer} materials (MoS$_{2}$, h-BN, \changed{NbOCl$_{2}$}) either in monolayer or multilayer form.  As mentioned before, their switching mechanisms are different.  \changed{In both D1 and D2, switching is due to a phase change of MoTe$_{2}$; however, in one case it is from H to T and in the other from H to H$_{d}$.} Good agreement with the experimental data for all these cases shows the \changed{generality} of our model and \changed{justifies the} modeling approach based on the MEP. \changed{For devices D1--D4, Fig.~\ref{fig:fitted_model_1} compares two parameterizations of the same model. In the free model, all parameters, including $E_{\text{SET}}$ and $E_{\text{RESET}}$, are treated as fitting parameters, whereas in the ab initio model $E_{\text{SET}}$ and $E_{\text{RESET}}$ are fixed to the activation barriers reported from first-principles calculations of the switching pathway [REF] and are not adjusted, while the remaining parameters are kept at their free-model values except $\alpha$, which is recalibrated. This is a more stringent test of the model: since the activation barriers dominate the Arrhenius switching kinetics, the close agreement obtained without fitting them shows that $E_{\text{SET}}$ and $E_{\text{RESET}}$ retain their physical meaning as barriers of the energy landscape rather than acting as arbitrary fitting constants. It thereby directly links the atomistic description of switching to the measured device characteristics, and suggests that switching characteristics of new 2D memristors can be anticipated from first-principles barriers before extensive device-level calibration.} We further validate our model for lateral 2D device (\textcolor{red}{supplementary}), conventional TMO based device (D5) and even honey-molecule based bio-organic device (D6)  \cite{WSe2,Jiang2016,SUEOKA2022106622}. Such an agreement is not surprising since our model is based on energy-landscape of atomic rearrangement, \changed{agnostic} to \changed{the} actual switching mechanism. The fitted parameters are presented in Table S2. We further demonstrate the ability of our model to capture intrinsic stochastic nature of h-BN memristors \cite{Lee} in Fig.\ref{fig:stochastic}. We attempt to predict the cycle-to-cycle variability \cite{deng2022} for 20 cycles using our model and observe \changed{low cycle-to-cycle} dispersion. The statistical variation of \changed{the} SET and RESET \changed{voltages} is also in close agreement with the experiments. For the SET and RESET operations, the reported mean ($\mu$), standard deviation ($\sigma$), and coefficient of variation ($C_{\text{V}}$) are $(2.955\text{ V}, 0.183\text{ V}, 6.21\%)$ and $(-3.732\text{ V}, 0.142\text{ V}, 3.81\%)$, respectively. 
+
+Although developed for binary memory, we explore the possibility \changed{of extending it to multistate memristors}, relevant for artificial \changed{neurons}. We first fit the baseline characteristics of the h-BN based multi-state device \cite{Shi2018Electronic}\changed{; then a} sequential shift in the switching thresholds (see Note S1 for details), as illustrated by the color gradient, captures the cycle-to-cycle variability induced by shifting energy barriers $E_{SET}$ and $E_{RESET}$, while keeping the compliance current strictly constant. \changed{However,} this methodology requires further exploration to capture \changed{pulse-width-dependent} potentiation and \changed{depression}. We also show the effect of temperature on the memristor hysteresis curve by incorporating the thermionic-emission temperature dependence of the HRS current and the temperature coefficient of resistance of the LRS~\cite{Chaudhary2026WS2}, with $T$ already entering the Arrhenius switching kinetics through $k_BT$. Between 250 and 400~K, the model reproduces the experimentally observed trends: the SET and RESET voltage magnitudes decrease linearly, the HRS resistance falls while the LRS resistance rises, and the ON/OFF ratio drops accordingly (see Supplementary Note S\_X for the equations, parameters and figures).
+
+
+
+
+\begin{figure}[tb]
+    \centering
+\includegraphics[width=\columnwidth]{stochastic.jpg}
+    \caption{(a) Switching I-V characteristics of a memristor device \changed{including white Gaussian noise (WGN) in the state variable.} \changed{(b) Stable} resistive switching behavior\changed{.} (c) Distribution of cycle-to-cycle \changed{V$_{\text{SET}}$ and} (d) \changed{V$_{\text{RESET}}$.}}
+    \label{fig:stochastic}
+\end{figure}
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=\columnwidth]{Fig4.png}
+\caption{(a) Simulated multilevel $I$--$V$ characteristics over 25 consecutive voltage sweep cycles. The colorbar indicates the cycle progression from 1 to 25, and the inset shows a magnified view of the gradual resistance state modulation in the switching region. (b) Corresponding current progression as a function of cycle number extracted at a read voltage of $1.2\text{ V}$.}
+    \label{fig:multicycle}
+\end{figure}
+
+Finally, we implement our Verilog-A model in SmartSpice \cite{SilvacoSmartSpice} to simulate a 3T1R (three-transistor, one-RRAM) CAM cell \cite{Jiang}. The cell comprises an RRAM device (R1), a pMOS (P1), an nMOS (N1), and an nMOS match-line driver (NML). The gates and sources of N1 and P1 connect to (DLn, SLn) and (DLp, SLp), respectively, while R1 bridges the resistor-source-line (SLr) and the shared drain node (NX). Biasing SLp, SLn, SLr, DLp, and DLn enables search operations and programming into logic `0', `1', or ``don't care'' (X) states (see Supplementary Information for detailed circuit logic). \changed{The schematic of the 3T1R TCAM cell and the simulated waveforms for the search and write operations are shown in Fig.~S\_X of the Supplementary Information.}
+
+
+% Figure 5 (3T1R TCAM schematic and waveforms) moved to the Supplementary Information.
+% \begin{figure}[tb]
+%     \centering
+%     \includegraphics[width=\columnwidth]{Fig5.png}
+%     \caption{(a) Schematic of \changed{the} 3T1R TCAM cell\changed{.} (b) Waveforms for search and write operations\changed{.}}
+%     \label{circuit}
+% \end{figure}
+
+See the supplementary material for XYZ.
+
+\begin{acknowledgments}
+\changed{This work is supported by ISRO.}
+\end{acknowledgments}
+
+\section{Competing Interests}\label{note}
+
+The authors declare no financial and non-financial competing interests.
+
+\section{Author contributions}\label{contribution}
+
+SG developed the model and validated the results. MSH developed the verilog model and subsequent circuit analysis. SM conceived the problem statement and analyzed the results along with SG and MSH. PK assisted in securing research funding. All the authors contributed to the manuscript writing.
+
+\section{Data availability}\label{Data}
+
+The authors declare that the main data supporting the findings of this study are available within the paper and its Supplementary files. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The "Acknowledgement" section can be given in all manuscript
+%% classes.  This should be given within the "acknowledgement"
+%% environment, which will make the correct section or running title.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The same is true for Supporting Information, which should use the
+%% suppinfo environment.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The appropriate \bibliography command should be placed here.
+%% Notice that the class file automatically sets \bibliographystyle
+%% and also names the section correctly.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\bibliographystyle{aipnum4-2}
+\nocite{aip41Control}
+\bibliographystyle{aipnum4-2}
+\bibliography{main}
+
+\end{document}

@@ -1,6 +1,6 @@
 {
   "_readme": "Site-level settings. Edit titles, navigation and text freely. Each page is either the interactive simulator or a Markdown file from content/. Add a page by adding an entry here and creating its .md file. See documentation/EDITING_GUIDE.md. A markdown page may have an 'aside' list of source files shown in a right-hand column (stacked below the text on narrow screens).",
-  "title": "Unified Compact Model for Memristor",
+  "title": "Energy-Landscape Derived Compact Model for 2D Memristor",
   "subtitle": "Interactive deterministic simulation of resistive switching",
   "author": "",
   "affiliation": "",
@@ -12,6 +12,14 @@
       "title": "Simulator",
       "type": "simulator",
       "intro": "content/simulator_intro.md"
+    },
+    {
+      "id": "custom",
+      "title": "Simulate Your Device",
+      "type": "custom",
+      "intro": "content/custom_intro.md",
+      "template": "backend/templates/user_model_template.py",
+      "example_data": "backend/templates/example_experimental_data.csv"
     },
     {
       "id": "model",

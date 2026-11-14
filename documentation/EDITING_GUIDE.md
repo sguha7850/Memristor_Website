@@ -117,3 +117,18 @@ The model names ("Free data model", "Ab initio model"), their short names in the
 ## 7. Experimental data
 
 **File:** `backend/data/experimental_iv.json` (`V`, `I`, `label`, `reference`, `units`).
+
+## 8. "Simulate Your Device" page
+
+Visitors can run their own Python model file on this page. Their code runs only in their own browser; nothing is uploaded.
+
+| What | Where |
+|---|---|
+| Page text, rules shown to visitors | `content/custom_intro.md` |
+| Template visitors download (format rules at its top) | `backend/templates/user_model_template.py` |
+| Example experimental data offered on the page | `backend/templates/example_experimental_data.csv` |
+| Page title, template and example paths | `config/site.json` → the page with `"type": "custom"` |
+
+**Changing the required file format:** the format is checked by `backend/user_model_runner.py`. The file must define `PARAMETERS` and `simulate(p)`; `simulate` must return `V` and `I`, and optionally `w` and `t`. If you change these rules, update the template's header text and `content/custom_intro.md` to match, then run the tests (`python -m pytest validation`).
+
+**Showing the ab initio model again on the Simulator page:** in `config/model_config.json`, under `variants`, set `"show_in_simulator": true` (or delete that line) for `ab_initio`.

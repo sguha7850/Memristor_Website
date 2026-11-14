@@ -80,7 +80,7 @@ a { color: var(--accent); }
   border-radius: 8px; width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; flex: none;
 }
 .nav-toggle { display: none; margin-left: auto; }
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
   .nav-toggle { display: grid; }
   .site-nav {
     display: none; position: absolute; top: 60px; left: 0; right: 0; flex-direction: column;
@@ -250,3 +250,35 @@ h4 { font-size: 15.5px; margin: 1.4em 0 .4em; }
 }
 .doc-aside .code-body { font-size: 12px; }
 @media (min-width: 1180px) { .doc-aside [data-act="expand"] { display: none; } }
+
+/* ---------- state-variable plot pair ---------- */
+.plot-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 760px) { .plot-pair { grid-template-columns: minmax(0, 1fr); } }
+.plot-sub { font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; margin: 2px 0 0 4px; }
+
+/* ---------- "Simulate Your Device" page ---------- */
+.custom-card { padding: 12px 16px 14px; margin-bottom: 20px; }
+.custom-card .plot-toolbar h2 { font-size: 17px; }
+.custom-hint { font-size: 13px; color: var(--ink-2); margin: 6px 0 10px; }
+.code-editor {
+  width: 100%; min-height: 320px; resize: vertical; padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--ink);
+  font: 12.5px/1.55 var(--font-mono); tab-size: 4; white-space: pre; overflow: auto;
+}
+.code-editor:focus { outline: 2px solid var(--accent-2); outline-offset: 0; }
+.custom-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.custom-file { font-size: 12.5px; color: var(--ink-3); }
+.custom-error { margin: 0; white-space: pre-wrap; font: 12px/1.5 var(--font-mono); }
+.file-btn { cursor: pointer; display: inline-block; }
+a.btn { text-decoration: none; display: inline-block; }
+
+/* ---------- long site title: wrap onto two lines ---------- */
+.brand { max-width: 360px; }
+.brand > span:last-child { min-width: 0; }
+.brand-title { white-space: normal; font-size: 16px; line-height: 1.2; }
+@media (max-width: 1180px) {
+  .brand { max-width: none; flex: 1 1 auto; }
+  .brand-sub { display: none; }
+}
+@media (max-width: 480px) { .brand-title { font-size: 14.5px; } }
+.header-inner { padding: 6px 0; }

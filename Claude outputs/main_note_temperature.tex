@@ -1,0 +1,39 @@
+% ---------------------------------------------------------------------
+% Short note for the main manuscript: temperature dependence
+% Paste into corrected_final.tex (e.g. after the multi-state paragraph).
+% Add the BibTeX entry at the end of this file to main.bib.
+% Figure file: Fig_temperature_IV.png
+% Replace "S_X" with the final number of the supplementary note/figure.
+% ---------------------------------------------------------------------
+
+Since temperature enters the switching kinetics explicitly through $k_BT$ [Eqs.~\eqref{eq:set} and \eqref{eq:reset}], the model can be extended to non-ambient operation. Following the temperature-dependent analysis of Chaudhary and Kaur~\cite{Chaudhary2026WS2}, the HRS current is given the temperature dependence of thermionic emission and the LRS conductance a linear temperature coefficient of resistance $\alpha_{TCR}$:
+\begin{equation}
+    I_s(T) = I_s(T_0)\left(\frac{T}{T_0}\right)^{2}\exp\left[\frac{\Phi_B}{k_B}\left(\frac{1}{T_0}-\frac{1}{T}\right)\right]
+    \label{eq:Is_T}
+\end{equation}
+\begin{equation}
+    G_{metallic}(T) = \frac{G_{metallic}(T_0)}{1+\alpha_{TCR}(T-T_0)}
+    \label{eq:G_T}
+\end{equation}
+with $V_T \propto T$ and $T_0 = 300$~K, at which the model reduces to its room-temperature form. With the ab initio parameters, a representative barrier height $\Phi_B = 0.38$~eV and $\alpha_{TCR} = 3.45\times10^{-3}$~K$^{-1}$~\cite{Chaudhary2026WS2}, the model reproduces three experimentally reported trends (Fig.~\ref{fig:temperature}). First, the SET and RESET voltage magnitudes decrease linearly with temperature, because thermal energy assists the field-lowered barrier crossing. Second, the HRS resistance decreases with the Arrhenius signature of thermionic emission. Third, the LRS resistance increases, as expected for metallic conduction. The resulting reduction of the ON/OFF ratio at elevated temperature is quantified, together with the equations and parameter choices, in Supplementary Note S\_X.
+
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=\columnwidth]{Fig_temperature_IV.png}
+    \caption{Simulated current--voltage hysteresis of the ab initio model at 250, 300, 350 and 400~K.}
+    \label{fig:temperature}
+\end{figure}
+
+% ---------------------------------------------------------------------
+% BibTeX entry (add to main.bib):
+%
+% @article{Chaudhary2026WS2,
+%   author  = {Chaudhary, Tanya and Kaur, Davinder},
+%   title   = {Revealing the potential of {2D} {WS$_2$} memristors as an artificial synapse with resilient gradual behavior at high temperatures for neuromorphic applications},
+%   journal = {Nanoscale Horiz.},
+%   volume  = {11},
+%   pages   = {1662--1675},
+%   year    = {2026},
+%   doi     = {10.1039/d6nh00013d}
+% }
+% ---------------------------------------------------------------------

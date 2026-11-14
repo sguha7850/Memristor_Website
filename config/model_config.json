@@ -1,5 +1,5 @@
 {
-  "_readme": "Editable website configuration. See documentation/EDITING_GUIDE.md. Defaults MUST equal the original code (enforced by validation/test_model_equivalence.py). Change label, symbol, units, description, min, max, step, scale, references freely. To turn a fixed parameter into a slider, move its entry from 'fixed' to 'sliders' and add scale/min/max. An empty units string means 'not stated in source' and is shown as such on the website. Units: a unit string, 'dimensionless', or '' (not yet added). 'show_in_table': false hides a fixed parameter from the documentation table.",
+  "_readme": "Editable website configuration. See documentation/EDITING_GUIDE.md. Defaults MUST equal the original code (enforced by validation/test_model_equivalence.py). Change label, symbol, units, description, min, max, step, scale, references freely. To turn a fixed parameter into a slider, move its entry from 'fixed' to 'sliders' and add scale/min/max. An empty units string means 'not stated in source' and is shown as such on the website. Units: a unit string, 'dimensionless', or '' (not yet added). 'show_in_table': false hides a fixed parameter from the documentation table. A variant with 'show_in_simulator': false is documented (parameter table) but not simulated on the Simulator page.",
   "config_version": "1.0.0",
   "model": {
     "name": "Unified compact model for memristor",
@@ -11,13 +11,13 @@
   "variants": [
     {
       "id": "empirical",
-      "label": "Free data model",
+      "label": "Free model",
       "description": "Every parameter value is a fitted value, chosen to best match the experimental data.",
       "plot_style": {
         "color": "#1f2937",
         "dash": "solid"
       },
-      "short_label": "Free data",
+      "short_label": "Free model",
       "param_suffix": ""
     },
     {
@@ -29,7 +29,8 @@
         "dash": "dot"
       },
       "short_label": "Ab initio",
-      "param_suffix": "_fp"
+      "param_suffix": "_fp",
+      "show_in_simulator": false
     }
   ],
   "parameters": {

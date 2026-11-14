@@ -10,7 +10,8 @@ const SLIDER_STEPS = 1000;
 
 export async function buildSimulator(root, ctx) {
   const { modelConfig: cfg, site } = ctx;
-  const variants = cfg.variants;
+  // variants with show_in_simulator: false (e.g. ab initio) stay documented but are not simulated here
+  const variants = cfg.variants.filter((v) => v.show_in_simulator !== false);
   const state = initialState(cfg);
   let worker = null, ready = false, reqId = 0, lastShown = 0, lastResult = null, info = {};
   let debounceTimer = null;
@@ -46,9 +47,16 @@ export async function buildSimulator(root, ctx) {
   const paramWidgets = [];
 
   if (sweep.length) controls.appendChild(group("Simulation", null, sweep.map((p) => paramControl(p, null))));
-  controls.appendChild(group("Shared by both models", null, shared.map((p) => paramControl(p, null))));
-  for (const v of variants) {
-    controls.appendChild(group(v.label, v, specific.map((p) => paramControl(p, v.id))));
+  if (variants.length === 1) {
+    // one model: all of its parameters in a single group
+    controls.appendChild(group("Model parameters", null, [
+      ...specific.map((p) => paramControl(p, variants[0].id)),
+      ...shared.map((p) => paramControl(p, null))]));
+  } else {
+    controls.appendChild(group("Shared by both models", null, shared.map((p) => paramControl(p, null))));
+    for (const v of variants) {
+      controls.appendChild(group(v.label, v, specific.map((p) => paramControl(p, v.id))));
+    }
   }
 
   resetAll.onclick = () => { paramWidgets.forEach((w) => w.reset(false)); schedule(); };
@@ -71,9 +79,12 @@ export async function buildSimulator(root, ctx) {
   plots.appendChild(ivCard);
 
   const wCard = el("div", "card plot-card");
-  wCard.innerHTML = `<div class="plot-toolbar"><h2>State variable over time</h2>
+  wCard.innerHTML = `<div class="plot-toolbar"><h2>State variable</h2>
     <div class="toggles" style="font-size:12.5px;color:var(--ink-3)">w = 0: OFF (HRS) · w = 1: ON (LRS)</div></div>
-    <div class="plot small" id="w-plot"></div>
+    <div class="plot-pair">
+      <div><div class="plot-sub">vs time</div><div class="plot small" id="w-plot"></div></div>
+      <div><div class="plot-sub">vs voltage</div><div class="plot small" id="wv-plot"></div></div>
+    </div>
     <table class="summary-table" id="sim-summary"></table>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
       <button class="btn" id="dl-csv" disabled>Download data (CSV)</button>
@@ -217,11 +228,29 @@ export async function buildSimulator(root, ctx) {
       lw.yaxis.range = [-0.05, 1.05];
       lw.margin.b = 48;
       if (wDiv.querySelector(".loader")) wDiv.innerHTML = "";
-      window.Plotly.react(wDiv, wt, lw, plotConfig("memristor_state"));
+      window.Plotly.react(wDiv, wt, lw, plotConfig("memristor_state_vs_time"));
+
+      // state variable vs voltage (follows the "all cycles / last cycle" choice)
+      const wvDiv = root.querySelector("#wv-plot");
+      const wv = [];
+      for (const v of variants) {
+        const r = res[v.id];
+        if (!r || r.status !== "ok" || !view.show[v.id]) continue;
+        const [Vs, ws] = sliceCycles(r.V, r.w, r.params);
+        wv.push({ type: "scattergl", mode: "lines", name: v.label, x: Vs, y: ws,
+          line: { color: colorFor(v.id, c), width: 1.8, dash: v.plot_style.dash === "dot" ? "dot" : "solid" },
+          hovertemplate: "V = %{x:.4g}<br>w = %{y:.4f}<extra></extra>" });
+      }
+      const lv = baseLayout(c, site.plot.x_label, site.plot.state_y_label, "linear");
+      lv.yaxis.range = [-0.05, 1.05];
+      lv.margin.b = 48;
+      if (wvDiv.querySelector(".loader")) wvDiv.innerHTML = "";
+      window.Plotly.react(wvDiv, wv, lv, plotConfig("memristor_state_vs_voltage"));
       summary(res);
       root.querySelector("#dl-csv").disabled = false;
     } else if (!wDiv.innerHTML) {
       wDiv.innerHTML = `<div class="loader">Waiting for the first simulation…</div>`;
+      root.querySelector("#wv-plot").innerHTML = `<div class="loader">Waiting for the first simulation…</div>`;
     }
   }
 
@@ -360,7 +389,7 @@ function colorFor(id, c) {
   if (c) return c(varName);
   return `var(${varName})`;
 }
-function baseLayout(c, xTitle, yTitle, yType) {
+export function baseLayout(c, xTitle, yTitle, yType) {
   const axis = (title, type) => ({
     title: { text: title, font: { size: 13, color: c("--ink-2") } }, type,
     gridcolor: c("--line"), zerolinecolor: c("--line"), linecolor: c("--ink-3"),
@@ -375,10 +404,11 @@ function baseLayout(c, xTitle, yTitle, yType) {
     showlegend: false, hovermode: "closest", uirevision: "keep",
   };
 }
-function plotConfig(filename) {
+export function plotConfig(filename) {
   return { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["lasso2d", "select2d"],
            toImageButtonOptions: { format: "png", filename, scale: 3 } };
 }
+export function saveBlob(blob, name) { save(blob, name); }
 function save(blob, name) {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);

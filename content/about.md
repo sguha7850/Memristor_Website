@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This site presents the unified compact model for memristor:
+This site presents the energy-landscape derived compact model for 2D memristors:
 - an interactive deterministic simulation;
 - its governing equations;
 - the source code: deterministic Python, stochastic Python (documentation only) and Verilog-A with a TCAM circuit.

@@ -3,6 +3,7 @@
 
 import { renderMarkdown, escapeHtml, codeBlock } from "./markdown.js";
 import { buildSimulator } from "./simulator.js";
+import { buildCustom } from "./custom.js";
 
 const ctx = { site: null, modelConfig: null, onThemeChange: [] };
 const pageNodes = {};
@@ -86,6 +87,8 @@ async function route() {
       const pctx = { ...ctx, page, pageId: page.id };
       if (page.type === "simulator") {
         await buildSimulator(node, pctx);
+      } else if (page.type === "custom") {
+        await buildCustom(node, pctx);
       } else {
         const md = await (await fetch(page.source, { cache: "no-cache" })).text();
         node.innerHTML = "";
@@ -118,7 +121,7 @@ async function route() {
   } else {
     window.scrollTo({ top: 0 });
   }
-  if (page.type === "simulator" && window.Plotly) {
+  if ((page.type === "simulator" || page.type === "custom") && window.Plotly) {
     // plots measured while hidden need a resize
     pageNodes[page.id].querySelectorAll(".js-plotly-plot").forEach((d) => window.Plotly.Plots.resize(d));
   }

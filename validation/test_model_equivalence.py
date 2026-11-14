@@ -181,3 +181,32 @@ def test_web_api_rejects_non_integer_cycles():
 def test_unknown_parameter_rejected():
     with pytest.raises(KeyError):
         mm.simulate({"not_a_parameter": 1.0})
+
+
+# ------------------------------------------- 4. "Simulate Your Device" page
+TEMPLATE = ROOT / "backend" / "templates" / "user_model_template.py"
+
+
+def test_template_loads_and_matches_website_model():
+    """The downloadable template reproduces the website model (free data set)."""
+    import user_model_runner as r
+    info = r.load(TEMPLATE.read_text(encoding="utf-8"))
+    assert info["parameters"]["num_cycles"]["integer"] is True
+    out = r.run({})                               # template defaults
+    ref = mm.simulate({"num_cycles": 2}, "empirical")
+    I_t = np.maximum(np.abs(out["I"]), 1e-11)
+    np.testing.assert_allclose(out["V"], ref["V"], rtol=0, atol=1e-12)
+    np.testing.assert_allclose(out["w"], ref["w"], rtol=1e-9, atol=1e-12)
+    np.testing.assert_allclose(I_t, ref["I_abs"], rtol=1e-9)
+    assert out["n_nonfinite"] == 0
+
+
+def test_runner_rejects_bad_files():
+    import user_model_runner as r
+    with pytest.raises(ValueError):
+        r.load("PARAMETERS = {}\n")                         # no simulate()
+    with pytest.raises(ValueError):
+        r.load("PARAMETERS = {'a': {'min': 0}}\ndef simulate(p): pass\n")   # no default
+    r.load("PARAMETERS = {'a': 1.0}\ndef simulate(p): return {'V': [0, 1], 'I': [0]}\n")
+    with pytest.raises(ValueError):
+        r.run({})                                           # unequal lengths
